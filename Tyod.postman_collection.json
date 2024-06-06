@@ -1,0 +1,204 @@
+{
+	"info": {
+		"_postman_id": "bf2cb3d2-f0aa-4191-b4a3-f977cdc60b06",
+		"name": "Tyod",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21434470"
+	},
+	"item": [
+		{
+			"name": "Chat - No files",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Chat1\",\r\n    \"userQuery\":\"Hello\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/chat/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"chat",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Chat - files + SysMsg",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\":\"Chat2\",\r\n    \"userQuery\":\"what is this document about\",\r\n    \"filename\":[\"Extentia MSA - IQVIA_FullyExecuted.pdf\"],\r\n    \"SysMsg\":\"you are a helpful assistant\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/chat/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"chat",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload File",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/User/Downloads/Extentia MSA - IQVIA_FullyExecuted.pdf"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/uploadfile/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"uploadfile",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Upload File - xlsx",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/User/Downloads/datafundfortest.xlsx"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/uploadfile/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"uploadfile",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Chat Names",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/getchatnames/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"getchatnames",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get FIle Names",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/getfilenames/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"getfilenames",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Chat History",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"chatname\":\"Chat2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://tyodbackend-eeedbf842d66.herokuapp.com/getchathistory/",
+					"protocol": "https",
+					"host": [
+						"tyodbackend-eeedbf842d66",
+						"herokuapp",
+						"com"
+					],
+					"path": [
+						"getchathistory",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
