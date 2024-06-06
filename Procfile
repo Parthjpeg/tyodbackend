@@ -1,1 +1,1 @@
-web: gunicorn IM_AIO.wsgi --timeout 1200
+web: gunicorn tyod.wsgi --timeout 1200
