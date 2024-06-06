@@ -78,10 +78,10 @@ WSGI_APPLICATION = 'tyod.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'tyoddb',
-        'USER': 'postgres',
-        'PASSWORD': 'test',
-        'HOST': 'localhost'
+        'NAME': 'dv5b1qp1s528c',
+        'USER': 'u7bpnp5e3b2j79',
+        'PASSWORD': 'p10d630d4fb600b89aa79b18f14ab7bee54de3581ec0b29eac332174a031d811f',
+        'HOST': 'ec2-44-223-239-88.compute-1.amazonaws.com'
     }
 }
 
