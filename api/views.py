@@ -22,7 +22,7 @@ def getfilenames(request):
 @api_view(["POSt"])
 def getchathistory(request):
     chathistory = Chat.objects.filter(name = request.data.get("chatname")).values("name" , "messages" , "files")
-    return Response(chathistory)
+    return Response(chathistory[0])
 
 @api_view(["POSt"])
 def chat(request):
