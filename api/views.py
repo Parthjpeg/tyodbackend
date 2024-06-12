@@ -89,16 +89,24 @@ def chat(request):
         res["files"] = []
     if(len(getchat)>0):
         updatemsg = getchat[0].messages
+        
         if(request.data.get("SysMsg")):
             if(updatemsg["history"][0].get("role") == 'user'):
                 updatemsg["history"].insert(0, {"role": "system", "content": request.data.get("SysMsg")})
             else:
                 updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+        
         if(not request.data.get("SysMsg")):
-            if(updatemsg["history"][0].get("role") == 'user'):
-                updatemsg["history"].insert(0, {"role": "system", "content": "you are a helpful assistant"})
+            if(request.data.get("Function") == "TYOD"):
+                if(updatemsg["history"][0].get("role") == 'user'):
+                    updatemsg["history"].insert(0, {"role": "system", "content": "you are a file summarizer"})
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
             else:
-                updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                if(updatemsg["history"][0].get("role") == 'user'):
+                    updatemsg["history"].insert(0, {"role": "system", "content": "you are a helpful assistant"})
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
 
         updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
         answer = getAnswer(updatemsg["history"])
