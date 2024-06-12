@@ -22,7 +22,7 @@ def getfilenames(request):
 @api_view(["POSt"])
 def getchathistory(request):
     chathistory = Chat.objects.filter(name = request.data.get("chatname")).values("name" , "messages" , "files")
-    return Response(chathistory[0])
+    return Response(chathistory)
 
 @api_view(["POSt"])
 def chat(request):
@@ -95,6 +95,14 @@ def chat(request):
         else:
             datatosend["files"] = []
         datatosend["messages"] = {"history":[]}
+
+        if(not request.data.get("userQuery")):
+            serializer = ChatSerializer(data=datatosend , partial=True)
+            if(serializer.is_valid()):
+                serializer.save()
+            else:
+                return Response(serializer.errors)
+            return Response({"answer":"chat updated"})
         if(request.data.get("SysMsg")):
             datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
         if(request.data.get("userQuery")):
@@ -107,7 +115,8 @@ def chat(request):
             serializer.save()
         else:
             return Response(serializer.errors)
-    return Response({"answer":answer})
+        
+        return Response({"answer":answer})
 # Create your views here.
 
 
