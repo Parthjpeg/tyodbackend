@@ -36,8 +36,8 @@ def deletechat(request):
 @api_view(["POST"])
 def renamechat(request):
     try:
-        chattodelete = Chat.objects.get(name = request.data.get("chatname"))
-        chattodelete.name = request.data.get("chatname")
+        chattodelete = Chat.objects.get(name = request.data.get("prevchatname"))
+        chattodelete.name = request.data.get("newchatname")
         chattodelete.save()
         return Response({"message":"chat renamed"})
     except:
