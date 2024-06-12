@@ -24,6 +24,15 @@ def getchathistory(request):
     chathistory = Chat.objects.filter(name = request.data.get("chatname")).values("name" , "messages" , "files")
     return Response(chathistory[0])
 
+@api_view(["POST"])
+def deletechat(request):
+    try:
+        chattodelete = Chat.objects.get(name = request.data.get("chatname"))
+        chattodelete.delete()
+        return Response({"message":"Chat Deleted"})
+    except:
+        return Response({"message":"Something went wrong"})
+
 @api_view(["POSt"])
 def chat(request):
     res = {}
