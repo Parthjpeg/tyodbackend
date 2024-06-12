@@ -24,5 +24,6 @@ urlpatterns = [
     path('getchatnames/',getchatnames),
     path('getfilenames/',getfilenames),
     path('getchathistory/',getchathistory),
-    path('searchxls/' , searchxls)
+    path('searchxls/' , searchxls),
+    path('deletechat/', deletechat)
 ]
