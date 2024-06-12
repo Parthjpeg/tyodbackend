@@ -39,6 +39,8 @@ def renamechat(request):
         chattodelete = Chat.objects.get(name = request.data.get("prevchatname"))
         chattodelete.name = request.data.get("newchatname")
         chattodelete.save()
+        chattodelete = Chat.objects.get(name = request.data.get("prevchatname"))
+        chattodelete.delete()
         return Response({"message":"chat renamed"})
     except:
         return Response({"message":"Something went wrong"})
@@ -89,7 +91,7 @@ def chat(request):
         res["files"] = []
     if(len(getchat)>0):
         updatemsg = getchat[0].messages
-        
+
         if(request.data.get("SysMsg")):
             if(updatemsg["history"][0].get("role") == 'user'):
                 updatemsg["history"].insert(0, {"role": "system", "content": request.data.get("SysMsg")})
