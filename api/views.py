@@ -32,6 +32,16 @@ def deletechat(request):
         return Response({"message":"Chat Deleted"})
     except:
         return Response({"message":"Something went wrong"})
+    
+@api_view(["POST"])
+def renamechat(request):
+    try:
+        chattodelete = Chat.objects.get(name = request.data.get("chatname"))
+        chattodelete.name = request.data.get("chatname")
+        chattodelete.save()
+        return Response({"message":"chat renamed"})
+    except:
+        return Response({"message":"Something went wrong"})
 
 @api_view(["POSt"])
 def chat(request):
@@ -84,6 +94,12 @@ def chat(request):
                 updatemsg["history"].insert(0, {"role": "system", "content": request.data.get("SysMsg")})
             else:
                 updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+        if(not request.data.get("SysMsg")):
+            if(updatemsg["history"][0].get("role") == 'user'):
+                updatemsg["history"].insert(0, {"role": "system", "content": "you are a helpful assistant"})
+            else:
+                updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+
         updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
         answer = getAnswer(updatemsg["history"])
         updatemsg["history"].append({"role": "assistant", "content": answer})
