@@ -140,6 +140,14 @@ def chat(request):
             return Response({"answer":"chat updated"})
         if(request.data.get("SysMsg")):
             datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+
+        
+        if(not request.data.get("SysMsg")):
+            if(request.data.get("Function") == "TYOD"):
+               datatosend["messages"]["history"].append({"role": "system", "content": "you are a file summarizer"})
+            else:
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+        
         if(request.data.get("userQuery")):
             datatosend["messages"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
             answer = getAnswer(datatosend["messages"]["history"])
