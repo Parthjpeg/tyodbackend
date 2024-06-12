@@ -97,10 +97,11 @@ def chat(request):
         datatosend["messages"] = {"history":[]}
         if(request.data.get("SysMsg")):
             datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
-        datatosend["messages"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
-        answer = getAnswer(datatosend["messages"]["history"])
-        datatosend["messages"]["history"].append({"role": "assistant", "content": answer})
-        print(datatosend)
+        if(request.data.get("userQuery")):
+            datatosend["messages"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
+            answer = getAnswer(datatosend["messages"]["history"])
+            datatosend["messages"]["history"].append({"role": "assistant", "content": answer})
+            print(datatosend)
         serializer = ChatSerializer(data=datatosend , partial=True)
         if(serializer.is_valid()):
             serializer.save()
