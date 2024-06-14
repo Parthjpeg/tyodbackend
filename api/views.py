@@ -93,10 +93,13 @@ def chat(request):
         updatemsg = getchat[0].messages
 
         if(request.data.get("SysMsg")):
-            if(updatemsg["history"][0].get("role") == 'user'):
-                updatemsg["history"].insert(0, {"role": "system", "content": request.data.get("SysMsg")})
-            else:
-                updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+            try:
+                if(updatemsg["history"][0].get("role") == 'user'):
+                    updatemsg["history"].insert(0, {"role": "system", "content": request.data.get("SysMsg")})
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+            except:
+                updatemsg["history"].append({"role": "system", "content": request.data.get("SysMsg")})
         
         if(not request.data.get("SysMsg")):
             if(request.data.get("Function") == "TYOD"):
