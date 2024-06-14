@@ -104,6 +104,7 @@ def chat(request):
                     if(updatemsg["history"][0].get("role") == 'user'):
                         updatemsg["history"].insert(0, {"role": "system", "content": "you are a file summarizer"})
                     else:
+                        updatemsg["history"] = []
                         updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
                 except:
                     updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
