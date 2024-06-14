@@ -104,16 +104,17 @@ def chat(request):
                     if(updatemsg["history"][0].get("role") == 'user'):
                         updatemsg["history"].insert(0, {"role": "system", "content": "you are a file summarizer"})
                     else:
-                        updatemsg["history"] = []
                         updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
                 except:
-                    updatemsg["history"] = []
-                    updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
+                    updatemsg["history"].append({"role": "system", "content": "you are a file summarizer"})
             else:
-                if(updatemsg["history"][0].get("role") == 'user'):
-                    updatemsg["history"].insert(0, {"role": "system", "content": "you are a helpful assistant"})
-                else:
-                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                try:
+                    if(updatemsg["history"][0].get("role") == 'user'):
+                        updatemsg["history"].insert(0, {"role": "system", "content": "you are a helpful assistant"})
+                    else:
+                        updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                except:
+                    updatemsg["history"].append({"role": "system", "content": "you are a file summarizer"})
 
         updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
         answer = getAnswer(updatemsg["history"])
