@@ -100,9 +100,12 @@ def chat(request):
         
         if(not request.data.get("SysMsg")):
             if(request.data.get("Function") == "TYOD"):
-                if(updatemsg["history"][0].get("role") == 'user'):
-                    updatemsg["history"].insert(0, {"role": "system", "content": "you are a file summarizer"})
-                else:
+                try:
+                    if(updatemsg["history"][0].get("role") == 'user'):
+                        updatemsg["history"].insert(0, {"role": "system", "content": "you are a file summarizer"})
+                    else:
+                        updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
+                except:
                     updatemsg["history"][0] = {"role": "system", "content": "you are a file summarizer"}
             else:
                 if(updatemsg["history"][0].get("role") == 'user'):
