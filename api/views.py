@@ -55,18 +55,16 @@ def chat(request):
             if (request.data.get("filename")[0].lower().endswith(('.pdf'))):
                 filenamelist = request.data.get("filename")
                 res["files"] = filenamelist
-                print("in if")
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 chunks = filecontent.objects.filter(filename__in=request.data.get("filename")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
-                print(chunks)
                 finalquery = "Question " + request.data.get("userQuery")
                 n = 1
                 for chunk in chunks:
                     finalquery += " File " + str(n) + " " + chunk.get("chunk")
                     n = n+1
-                print(finalquery)
                 request.data["userQuery"] = finalquery
             elif (request.data.get("filename")[0].lower().endswith(('.xlsx'))):
+                
                 filenamelist = request.data.get("filename")
                 res["files"] = filenamelist
                 finalquery = "Question " + request.data.get("userQuery")
@@ -74,19 +72,17 @@ def chat(request):
                 userQuery = request.data.get("userQuery")
                 userQuery_vector = numpy.array(Get_Embeddings(userQuery))
                 data = excelfilecontent.objects.filter(filename__in=request.data.get("filename")).values('filename' , 'content')
-                print(data)
                 try:
                     for datapoints in data:
-                        print(datapoints.get("filename"))
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(userQuery_vector-feature_vector)
-                            if(dist<0.7):
+                            if(dist<0.75):
                                 s = s+ " " + realdata["alldata"]
                 except:
                     pass
                 finalquery = finalquery+ " Data " + s
-                request.data["userQuery"] = finalquery       
+                request.data["userQuery"] = finalquery    
     else:
         res["files"] = []
     if(len(getchat)>0):
@@ -118,14 +114,11 @@ def chat(request):
                         updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
                 except:
                     updatemsg["history"].append({"role": "system", "content": "you are a file summarizer"})
-
         updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
         answer = getAnswer(updatemsg["history"])
         updatemsg["history"].append({"role": "assistant", "content": answer})
 
         res["messages"] = updatemsg
-        print(res)
-        # print(dic1)
         serializer = ChatSerializer(getchat[0], data=res, partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -161,7 +154,6 @@ def chat(request):
             datatosend["messages"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
             answer = getAnswer(datatosend["messages"]["history"])
             datatosend["messages"]["history"].append({"role": "assistant", "content": answer})
-            print(datatosend)
         serializer = ChatSerializer(data=datatosend , partial=True)
         if(serializer.is_valid()):
             serializer.save()
@@ -179,10 +171,8 @@ def uploadfile(request):
     words = ""
     files = request.FILES['file']
     filename = str(files)
-    print(filename)
     if filename.lower().endswith(('.pdf')):
         reader = PdfReader(files)
-        print(len(reader.pages))
         #get filename
         filenamedata = {"filename":filename}
         serializer = fileSerializer(data=filenamedata)
@@ -241,7 +231,6 @@ def uploadfile(request):
                     data[key] = str(data[key])
                 s = s+" "+key +" " + str(data[key])
             feature_vector = Get_Embeddings(s)
-            print(type(feature_vector))
             data["feature_vector"] = feature_vector
             data["alldata"] = s
         finaldic["filename"] = filename
@@ -266,7 +255,6 @@ def searchxls(request):
     userQuery_vector = numpy.array(Get_Embeddings(userQuery))
     data = excelfilecontent.objects.filter(filename__in=request.data.get("filenames")).values('filename' , 'content')
     for datapoints in data:
-        print(datapoints.get("filename"))
         for realdata in datapoints.get("content").get('data'):
             feature_vector = numpy.array(realdata["feature_vector"])
             dist = numpy.linalg.norm(userQuery_vector-feature_vector)
