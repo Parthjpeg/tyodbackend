@@ -107,7 +107,7 @@ def chat(request):
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
-                    serializer = ChatSerializer(data=datatosend , partial=True)
+                serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
                 else:
@@ -161,7 +161,7 @@ def chat(request):
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
-                    serializer = ChatSerializer(data=datatosend , partial=True)
+                serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
                 else:
