@@ -51,6 +51,187 @@ def chat(request):
     filenamelist = []
     chatname = request.data.get("name")
     getchat = Chat.objects.filter(name=chatname)
+
+
+    if(request.data.get("Function")):
+        if(request.data.get("Function") == "TyodAmc"):
+            if(len(getchat)>0):
+                res = {}
+                s = ""
+                answer = ""
+                updatemsg = getchat[0].messages
+                query_vector = Get_Embeddings(request.data.get("userQuery"))
+                data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                query_vector = Get_Embeddings(request.data.get("userQuery"))
+                for datapoints in data:
+                    for realdata in datapoints.get("content").get('data'):
+                        feature_vector = numpy.array(realdata["feature_vector"])
+                        dist = numpy.linalg.norm(query_vector-feature_vector)
+                        if(dist<0.75):
+                            s = s+ " " + realdata["alldata"]
+                request.data["userQuery"] = request.data["userQuery"] + " Data " + s
+                updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content": answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+            else:
+                answer = "TyodAmc Chat created"
+                s = ""
+                datatosend = {"name":request.data.get("name")}
+                datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
+                if(request.data.get("userQuery")):
+                    data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                    query_vector = Get_Embeddings(request.data.get("userQuery"))
+                    for datapoints in data:
+                        for realdata in datapoints.get("content").get('data'):
+                            feature_vector = numpy.array(realdata["feature_vector"])
+                            dist = numpy.linalg.norm(query_vector-feature_vector)
+                            if(dist<0.75):
+                                s = s+ " " + realdata["alldata"]
+                    request.data["userQuery"] = request.data["userQuery"] + " Data " + s
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+        elif(request.data.get("Function") == "TyodMis"):
+            if(len(getchat)>0):
+                res = {}
+                s = ""
+                answer = ""
+                updatemsg = getchat[0].messages
+                query_vector = Get_Embeddings(request.data.get("userQuery"))
+                data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                query_vector = Get_Embeddings(request.data.get("userQuery"))
+                for datapoints in data:
+                    for realdata in datapoints.get("content").get('data'):
+                        feature_vector = numpy.array(realdata["feature_vector"])
+                        dist = numpy.linalg.norm(query_vector-feature_vector)
+                        if(dist<0.75):
+                            s = s+ " " + realdata["alldata"]
+                request.data["userQuery"] = request.data["userQuery"] + " Data " + s
+                updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content": answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+
+            else:
+                answer = "TyodMis Chat created"
+                s = ""
+                datatosend = {"name":request.data.get("name")}
+                datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
+                if(request.data.get("userQuery")):
+                    data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                    query_vector = Get_Embeddings(request.data.get("userQuery"))
+                    for datapoints in data:
+                        for realdata in datapoints.get("content").get('data'):
+                            feature_vector = numpy.array(realdata["feature_vector"])
+                            dist = numpy.linalg.norm(query_vector-feature_vector)
+                            if(dist<0.75):
+                                s = s+ " " + realdata["alldata"]
+                    request.data["userQuery"] = request.data["userQuery"] + " Data " + s
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+        elif(request.data.get("Function") == "TyodDoc"):
+            if(len(getchat)>0):
+                res = {}
+                updatemsg = getchat[0].messages
+                query_vector = Get_Embeddings(request.data.get("userQuery"))
+                chunks = filecontent.objects.filter(filename="Extentia MSA - IQVIA_FullyExecuted.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+                request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
+                updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content": answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+            else:
+                answer = "TyodDoc Chat Created"
+                datatosend = {"name":request.data.get("name")}
+                datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query"})
+                if(request.data.get("userQuery")):
+                    query_vector = Get_Embeddings(request.data.get("userQuery"))
+                    chunks = filecontent.objects.filter(filename="Extentia MSA - IQVIA_FullyExecuted.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+                    request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
+                    print(type(request.data["userQuery"]))
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+
+        else:
+            if(len(getchat)>0):
+                res = {}
+                updatemsg = getchat[0].messages
+                updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content": answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+            else:
+                answer = "Chat Created"
+                datatosend = {"name":request.data.get("name")}
+                datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                if(request.data.get("userQuery")):
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+                
+
+        
+
+
     if(request.data.get("filename")):
             if (request.data.get("filename")[0].lower().endswith(('.pdf'))):
                 filenamelist = request.data.get("filename")
