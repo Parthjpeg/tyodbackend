@@ -10,6 +10,7 @@ class Chat(models.Model):
     name = models.CharField(max_length=255 , primary_key=True)
     messages = models.JSONField()
     files = ArrayField(models.CharField(blank=True , null=True), blank=True)
+    function = models.CharField(max_length=255 , null=True)
 
 class filecontent(models.Model):
     filename=models.ForeignKey(files, on_delete=models.CASCADE)

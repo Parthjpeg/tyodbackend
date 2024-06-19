@@ -51,8 +51,12 @@ def chat(request):
     filenamelist = []
     chatname = request.data.get("name")
     getchat = Chat.objects.filter(name=chatname)
-
-
+    try:
+        print(getchat[0].function)
+        request.data["Function"] = getchat[0].function
+    except:
+        print("in pass")
+    print(request.data["Function"])
     if(request.data.get("Function")):
         if(request.data.get("Function") == "TyodAmc"):
             if(len(getchat)>0):
@@ -81,9 +85,12 @@ def chat(request):
                     return Response(serializer.errors)
                 return Response({"answer":answer})
             else:
+                print("in else")
                 answer = "TyodAmc Chat created"
                 s = ""
                 datatosend = {"name":request.data.get("name")}
+                print(datatosend)
+                datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
@@ -137,6 +144,7 @@ def chat(request):
                 answer = "TyodMis Chat created"
                 s = ""
                 datatosend = {"name":request.data.get("name")}
+                datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
@@ -179,6 +187,7 @@ def chat(request):
             else:
                 answer = "TyodDoc Chat Created"
                 datatosend = {"name":request.data.get("name")}
+                datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query"})
@@ -214,6 +223,7 @@ def chat(request):
             else:
                 answer = "Chat Created"
                 datatosend = {"name":request.data.get("name")}
+                datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
