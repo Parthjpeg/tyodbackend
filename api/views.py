@@ -147,7 +147,7 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions you have to mention the following - 1)Current Project 2)Total Allocation Percentage 3)Availability Percentage 4)PM 5)VP"})
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
