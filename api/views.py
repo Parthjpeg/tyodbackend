@@ -120,13 +120,13 @@ def chat(request):
                 answer = ""
                 updatemsg = getchat[0].messages
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
-                data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 for datapoints in data:
                     for realdata in datapoints.get("content").get('data'):
                         feature_vector = numpy.array(realdata["feature_vector"])
                         dist = numpy.linalg.norm(query_vector-feature_vector)
-                        if(dist<0.75):
+                        if(dist<0.8):
                             s = s+ " " + realdata["alldata"]
                 request.data["userQuery"] = request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
@@ -149,13 +149,13 @@ def chat(request):
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions"})
                 if(request.data.get("userQuery")):
-                    data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                    data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
                     for datapoints in data:
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(query_vector-feature_vector)
-                            if(dist<0.75):
+                            if(dist<0.8):
                                 s = s+ " " + realdata["alldata"]
                     request.data["userQuery"] = request.data["userQuery"] + " Data " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
