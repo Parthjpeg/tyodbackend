@@ -126,7 +126,7 @@ def chat(request):
                     for realdata in datapoints.get("content").get('data'):
                         feature_vector = numpy.array(realdata["feature_vector"])
                         dist = numpy.linalg.norm(query_vector-feature_vector)
-                        if(dist<0.7):
+                        if(dist<0.75):
                             s = s+ " " + realdata["alldata"]
                 request.data["userQuery"] =  "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
@@ -155,7 +155,7 @@ def chat(request):
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(query_vector-feature_vector)
-                            if(dist<0.7):
+                            if(dist<0.75):
                                 s = s+ " " + realdata["alldata"]
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data to refer to " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
