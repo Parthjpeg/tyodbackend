@@ -71,7 +71,7 @@ def chat(request):
                     for realdata in datapoints.get("content").get('data'):
                         feature_vector = numpy.array(realdata["feature_vector"])
                         dist = numpy.linalg.norm(query_vector-feature_vector)
-                        if(dist<0.75):
+                        if(dist<0.7):
                             s = s+ " " + realdata["alldata"]
                 request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
@@ -93,7 +93,7 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet"})
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -101,7 +101,7 @@ def chat(request):
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(query_vector-feature_vector)
-                            if(dist<0.75):
+                            if(dist<0.7):
                                 s = s+ " " + realdata["alldata"]
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
@@ -126,7 +126,7 @@ def chat(request):
                     for realdata in datapoints.get("content").get('data'):
                         feature_vector = numpy.array(realdata["feature_vector"])
                         dist = numpy.linalg.norm(query_vector-feature_vector)
-                        if(dist<0.75):
+                        if(dist<0.7):
                             s = s+ " " + realdata["alldata"]
                 request.data["userQuery"] =  "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
@@ -147,7 +147,7 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions you have to mention the following - 1)Current Project 2)Total Allocation Percentage 3)Availability Percentage 4)PM 5)VP answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet"})
+                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions you have to mention the following - 1)Current Project 2)Total Allocation Percentage 3)Availability Percentage 4)PM 5)VP answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet. The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -155,7 +155,7 @@ def chat(request):
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(query_vector-feature_vector)
-                            if(dist<0.75):
+                            if(dist<0.7):
                                 s = s+ " " + realdata["alldata"]
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data to refer to " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
@@ -190,7 +190,7 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the document"})
+                datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the document.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
                     chunks = filecontent.objects.filter(filename="Extentia MSA - IQVIA_FullyExecuted.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
