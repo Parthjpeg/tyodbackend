@@ -9,6 +9,41 @@ from pgvector.django import L2Distance
 import pandas as pd
 import numpy
 
+
+
+def getfiledata(filelist , userQuery):
+    if (filelist[0].lower().endswith(('.pdf'))):
+        filenamelist = filelist
+        query_vector = Get_Embeddings(userQuery)
+        chunks = filecontent.objects.filter(filename__in=filelist).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+        finalquery = "Question " + userQuery
+        n = 1
+        for chunk in chunks:
+            finalquery += " File " + str(n) + " " + chunk.get("chunk")
+            n = n+1
+        userQuery = finalquery
+        return userQuery
+    elif (filelist("filename")[0].lower().endswith(('.xlsx'))):
+            filenamelist = filelist
+            finalquery = "Question " + userQuery
+            s  =""  
+            userQuery_vector = numpy.array(Get_Embeddings(userQuery))
+            data = excelfilecontent.objects.filter(filename__in=filelist).values('filename' , 'content')
+            try:
+                for datapoints in data:
+                    for realdata in datapoints.get("content").get('data'):
+                        feature_vector = numpy.array(realdata["feature_vector"])
+                        dist = numpy.linalg.norm(userQuery_vector-feature_vector)
+                        if(dist<0.7):
+                            s = s+ " " + realdata["alldata"]
+            except:
+                pass
+            finalquery = finalquery+ " Data " + s
+            return finalquery   
+
+
+
+
 @api_view(["POSt"])
 def getchatnames(request):
     chatname = Chat.objects.all().values("name")
@@ -71,7 +106,7 @@ def chat(request):
                     for realdata in datapoints.get("content").get('data'):
                         feature_vector = numpy.array(realdata["feature_vector"])
                         dist = numpy.linalg.norm(query_vector-feature_vector)
-                        if(dist<0.7):
+                        if(dist<0.75):
                             s = s+ " " + realdata["alldata"]
                 request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
@@ -101,7 +136,7 @@ def chat(request):
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(query_vector-feature_vector)
-                            if(dist<0.7):
+                            if(dist<0.75):
                                 s = s+ " " + realdata["alldata"]
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
@@ -205,6 +240,59 @@ def chat(request):
                 else:
                     return Response(serializer.errors)
                 return Response({"answer":answer})
+            
+
+
+
+        elif(request.data.get("Function") == "Tyod"):
+            if(len(getchat)>0):
+                updatemsg = getchat[0].messages
+                res["files"] = request.data.get("filename")
+                if(request.data.get("SysMsg")):
+                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                
+                request.data["userQuery"] = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
+                updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content":answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                        return Response(serializer.errors)
+                return Response({"answer":answer})
+            
+            else:
+                answer = "Tyod Chat Created"
+                datatosend = {"name":request.data.get("name")}
+                datatosend["function"] = request.data.get("Function")
+                datatosend["files"] = request.data.get("filename")
+                datatosend["messages"] = {"history":[]}
+                if(request.data.get("SysMsg")):
+                    datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+                else:
+                    datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                if(request.data.get("userQuery")):
+                    request.data["userQuery"] = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
+                
+
+
+
+        
+
+
+
 
         else:
             if(len(getchat)>0):
@@ -238,10 +326,6 @@ def chat(request):
                     return Response(serializer.errors)
                 return Response({"answer":answer})
                 
-
-        
-
-
     if(request.data.get("filename")):
             if (request.data.get("filename")[0].lower().endswith(('.pdf'))):
                 filenamelist = request.data.get("filename")
@@ -268,7 +352,7 @@ def chat(request):
                         for realdata in datapoints.get("content").get('data'):
                             feature_vector = numpy.array(realdata["feature_vector"])
                             dist = numpy.linalg.norm(userQuery_vector-feature_vector)
-                            if(dist<0.75):
+                            if(dist<0.7):
                                 s = s+ " " + realdata["alldata"]
                 except:
                     pass
