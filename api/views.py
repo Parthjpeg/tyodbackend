@@ -100,7 +100,7 @@ def chat(request):
                 answer = ""
                 updatemsg = getchat[0].messages
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
-                data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                data = excelfilecontent.objects.filter(filename="Amc.xlsx").values('filename' , 'content')
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 for datapoints in data:
                     for realdata in datapoints.get("content").get('data'):
@@ -130,7 +130,7 @@ def chat(request):
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
-                    data = excelfilecontent.objects.filter(filename="datafundfortest.xlsx").values('filename' , 'content')
+                    data = excelfilecontent.objects.filter(filename="Amc.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
                     for datapoints in data:
                         for realdata in datapoints.get("content").get('data'):
