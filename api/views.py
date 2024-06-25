@@ -298,6 +298,10 @@ def chat(request):
             if(len(getchat)>0):
                 res = {}
                 updatemsg = getchat[0].messages
+                if(request.data.get("SysMsg")):
+                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
                 updatemsg["history"].append({"role": "assistant", "content": answer})
@@ -314,7 +318,10 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                if(request.data.get("SysMsg")):
+                    datatosend["messages"]["history"].append({"role": "system", "content":request.data.get("SysMsg")})
+                else:
+                    datatosend["messages"]["history"].append({"role": "system", "content":"you are a helpful assistant"})
                 if(request.data.get("userQuery")):
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
