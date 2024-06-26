@@ -38,3 +38,5 @@ rsa==4.9
 pandas==2.0.1
 pypdf==4.2.0
 openpyxl==3.1.2
+googlesearch-python==1.2.3
+beautifulsoup4==4.12.2

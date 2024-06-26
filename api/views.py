@@ -43,14 +43,17 @@ def getfiledata(filelist , userQuery):
 
 
 
-# @api_view(["POST"])
-# def getGoogleSearch(request):
-#     res = googleSearch(request.data.get("userQuery"))
-#     l = {}
-#     for i in res:
-#         text = gettextfromwebsite(i)
-#         l[]
-#     return Response({"req":res})
+@api_view(["POST"])
+def getGoogleSearch(request):
+    res = googleSearch(request.data.get("userQuery"))
+    l = {}
+    for i in res:
+        print(i)
+        text = gettextfromwebsite(i)
+        l[i] = text
+        print(l)
+    print(l)
+    return Response({"req":res})
 
 @api_view(["POSt"])
 def getchatnames(request):

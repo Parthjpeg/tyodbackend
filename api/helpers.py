@@ -23,13 +23,16 @@ def getAnswer(messages):
   return response.choices[0].message.content
 
 def googleSearch(searchQuery):
-  res = search(searchQuery, num_results=5)
+  res = search(searchQuery, num_results=2)
   set1 = set(res)
   return set1
 
 
 def gettextfromwebsite(url):
-  response = requests.get(url)
+  try:
+    response = requests.get(url)
+  except:
+     return "something went wrong"
   if response.status_code == 200:
       soup = BeautifulSoup(response.content, 'html.parser')
       all_text = soup.get_text()
