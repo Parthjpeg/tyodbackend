@@ -23,7 +23,7 @@ def getfiledata(filelist , userQuery):
             n = n+1
         userQuery = finalquery
         return userQuery
-    elif (filelist("filename")[0].lower().endswith(('.xlsx'))):
+    elif (filelist[0].lower().endswith(('.xlsx'))):
             filenamelist = filelist
             finalquery = "Question " + userQuery
             s  =""  
@@ -43,6 +43,14 @@ def getfiledata(filelist , userQuery):
 
 
 
+# @api_view(["POST"])
+# def getGoogleSearch(request):
+#     res = googleSearch(request.data.get("userQuery"))
+#     l = {}
+#     for i in res:
+#         text = gettextfromwebsite(i)
+#         l[]
+#     return Response({"req":res})
 
 @api_view(["POSt"])
 def getchatnames(request):
