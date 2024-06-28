@@ -1,26 +1,8 @@
-from openai import OpenAI
 from googlesearch import search
 import requests
 from bs4 import BeautifulSoup
 import threading
 
-client = OpenAI()
-
-def Get_Embeddings(embedding_string):
-  response = client.embeddings.create(
-    input= embedding_string,
-    model="text-embedding-ada-002"
-  )
-  feature_vector = response.data[0].embedding
-  return feature_vector
-
-def getAnswer(messages):
-  
-  response = client.chat.completions.create(
-  model="gpt-4o",
-  messages=messages
-  )
-  return response.choices[0].message.content
 
 def googleSearch(searchQuery):
   res = search(searchQuery, num_results=2)
@@ -42,6 +24,7 @@ def gettextfromwebsitethread(url,all_texts):
   
 def gettextfromwebsite(url , all_texts):
   
+  l = []
   thread = threading.Thread(target=gettextfromwebsitethread , args= (url,all_texts))
   thread.daemon = True
   thread.start()
@@ -49,3 +32,18 @@ def gettextfromwebsite(url , all_texts):
 
   if thread.is_alive():
         print("Function timed out")
+  return all_texts
+
+
+
+urls = googleSearch("python to print hello world")
+all_texts = []  # This list will store all the texts
+
+for url in urls:
+   print(url)
+   gettextfromwebsite(url , all_texts)
+print (len(all_texts))
+   
+
+
+

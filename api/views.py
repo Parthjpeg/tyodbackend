@@ -46,14 +46,12 @@ def getfiledata(filelist , userQuery):
 @api_view(["POST"])
 def getGoogleSearch(request):
     res = googleSearch(request.data.get("userQuery"))
-    l = {}
+    all_texts = []
     for i in res:
         print(i)
-        text = gettextfromwebsite(i)
-        l[i] = text
-        print(l)
-    print(l)
-    return Response({"req":res})
+        gettextfromwebsite(i , all_texts)
+    print(all_texts)
+    return Response({"req":all_texts})
 
 @api_view(["POSt"])
 def getchatnames(request):
@@ -193,7 +191,7 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
-                datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions you have to mention the following - 1)Current Project 2)Total Allocation Percentage 3)Availability Percentage 4)PM 5)VP answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet. The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
+                datatosend["messages"]["history"].append({"role": "system", "content": "You are an expert who will provide insights based on the data provided within the user's query. Your responses should follow these guidelines: Current Project Total Allocation Percentage Availability Percentage PM (Project Manager) VP (Vice President) Answer according to the specific question the user is asking. If the question cannot be answered with the data provided, do not answer. If the user query is not supported by data in the provided Excel sheet, state that the data could not be found. The format will be: User Query: (user query) Data to refer to: (data) Your job is to only answer according to the user query. If the user asks something beyond this scope, politely decline and bring the conversation back to the topic. If the user greets you (e.g., Hi), respond with a greeting. Enhance and adhere strictly to this system message when responding."})
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -496,7 +494,7 @@ def uploadfile(request):
                 else:
                     chunk = chunk+i
                     cnt = cnt+1
-            if(len(chunk)>1):
+            if(len(chunk)>=1):
                 data = {"filename":filename}
                 data["chunk"] = chunk
                 data["feature_vector"] = Get_Embeddings(chunk)
