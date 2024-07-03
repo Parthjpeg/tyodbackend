@@ -3,7 +3,7 @@ from googlesearch import search
 import requests
 from bs4 import BeautifulSoup
 import threading
-import enchant
+from Levenshtein import distance
 from operator import itemgetter
 from urllib.parse import urlparse
 import re
@@ -53,7 +53,7 @@ def getUrls(userQuery):
                 pass
             elif not link.get('href') in urlset:
                 urlset.add(link.get('href'))
-                dataurl = {"url" : link.get('href'), "dist" : enchant.utils.levenshtein(link.get('href'), userQuery)}
+                dataurl = {"url" : link.get('href'), "dist" : distance(link.get('href'), userQuery)}
                 urldic.append(dataurl)
     newlist = sorted(urldic, key=itemgetter('dist'))
     return newlist

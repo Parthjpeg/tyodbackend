@@ -40,4 +40,4 @@ pypdf==4.2.0
 openpyxl==3.1.2
 googlesearch-python==1.2.3
 beautifulsoup4==4.12.2
-pyenchant==3.2.2
+Levenshtein==0.25.1
