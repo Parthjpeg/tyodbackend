@@ -339,6 +339,7 @@ def chat(request):
                     serializer.save()
                 else:
                     return Response(serializer.errors)
+                print(answer)
                 return Response({"answer":answer})
 
         else:
