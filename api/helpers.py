@@ -89,6 +89,6 @@ def gettextfromwebsite(url , all_texts):
   thread = threading.Thread(target=gettextfromwebsitethread , args= (url,all_texts))
   thread.daemon = True
   thread.start()
-  thread.join(10)
+  thread.join(1)
   if thread.is_alive():
         print("Function timed out")

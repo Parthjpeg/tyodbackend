@@ -49,7 +49,7 @@ def getGoogleSearch(userQuery):
     for i in res:
         print(i)
         gettextfromwebsite(i.get('url') , all_texts)
-        if (len(all_texts)>5):
+        if (len(all_texts)>2):
             break
     return all_texts
 
