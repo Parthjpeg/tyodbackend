@@ -8,7 +8,7 @@ from pypdf import PdfReader
 from pgvector.django import L2Distance
 import pandas as pd
 import numpy
-
+import threading
 
 
 def getfiledata(filelist , userQuery):
@@ -42,16 +42,16 @@ def getfiledata(filelist , userQuery):
             return finalquery   
 
 
-
-@api_view(["POST"])
-def getGoogleSearch(request):
-    res = googleSearch(request.data.get("userQuery"))
+def getGoogleSearch(userQuery):
+    print("in google search")
+    res = getUrls(userQuery)
     all_texts = []
     for i in res:
         print(i)
-        gettextfromwebsite(i , all_texts)
-    print(all_texts)
-    return Response({"req":all_texts})
+        gettextfromwebsite(i.get('url') , all_texts)
+        if (len(all_texts)>5):
+            break
+    return all_texts
 
 @api_view(["POSt"])
 def getchatnames(request):
@@ -298,10 +298,48 @@ def chat(request):
 
 
 
-        
 
 
 
+
+        elif(request.data.get("Function") == "intSearch"):
+            if(len(getchat)>0):
+                res = {}
+                s = ""
+                answer = ""
+                updatemsg = getchat[0].messages
+                request.data["userQuery"] = "User Query "+ request.data["userQuery"] + " " +str(getGoogleSearch(request.data.get("userQuery")))
+                updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                answer = getAnswer(updatemsg["history"])
+                updatemsg["history"].append({"role": "assistant", "content":answer})
+                res["messages"] = updatemsg
+                serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                if serializer.is_valid():
+                    serializer.save()
+                else:
+                        return Response(serializer.errors)
+                return Response({"answer":answer})
+            else:
+                print("in else")
+                answer = "Internet Chat created"
+                s = ""
+                datatosend = {"name":request.data.get("name")}
+                print(datatosend)
+                datatosend["function"] = request.data.get("Function")
+                datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                datatosend["messages"]["history"].append({"role": "system", "content": """you are an internet search bot the user will ask a query and your job is to answer that query. The data required to answer that query will be provided within the query in the following format UserQuery : UserQuery , Data : [url:url , data:data , url2:url2 , data2:data2]."""})
+                if(request.data.get("userQuery")):
+                    request.data["userQuery"] = "USER QUERY - {"+ request.data["userQuery"] + "} Data " +str(getGoogleSearch(request.data.get("userQuery")))
+                    print(request.data["userQuery"])
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                serializer = ChatSerializer(data=datatosend , partial=True)
+                if(serializer.is_valid()):
+                    serializer.save()
+                else:
+                    return Response(serializer.errors)
+                return Response({"answer":answer})
 
         else:
             if(len(getchat)>0):

@@ -34,16 +34,11 @@ def gettextfromwebsite(url , all_texts):
         print("Function timed out")
   return all_texts
 
-
-
-urls = googleSearch("python to print hello world")
+urls = googleSearch("hotels in pune")
+print(urls)
 all_texts = []  # This list will store all the texts
 
 for url in urls:
    print(url)
    gettextfromwebsite(url , all_texts)
 print (len(all_texts))
-   
-
-
-
