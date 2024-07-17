@@ -7,6 +7,7 @@ from Levenshtein import distance
 from operator import itemgetter
 from urllib.parse import urlparse
 import re
+import os
 
 
 def cleandata(text):
@@ -18,20 +19,53 @@ def cleandata(text):
 client = OpenAI()
 
 def Get_Embeddings(embedding_string):
-  response = client.embeddings.create(
-    input= embedding_string,
-    model="text-embedding-ada-002"
-  )
-  feature_vector = response.data[0].embedding
-  return feature_vector
+  # response = client.embeddings.create(
+  #   input= embedding_string,
+  #   model="text-embedding-ada-002"
+  # )
+  # feature_vector = response.data[0].embedding
+  # return feature_vector
+  api_key = os.environ['embedding_key']
+  url = os.environ["embedding_url"]
+  hdr ={# Request headers
+          'x-service-line': 'CXM',
+          'x-brand': 'merkle',
+          'x-project': 'Intelligent_M',
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'api-version': 'v8',
+          'Ocp-Apim-Subscription-Key': api_key}
+  data =  {
+      "input": embedding_string,
+      "user": "string",
+      "input_type": "query"
+  }
+  response = requests.post(url=url,headers=hdr , json = data)
+  return response.json().get('data')[0].get('embedding')
 
 def getAnswer(messages):
   
-  response = client.chat.completions.create(
-  model="gpt-4o",
-  messages=messages
-  )
-  return response.choices[0].message.content
+  # response = client.chat.completions.create(
+  # model="gpt-4o",
+  # messages=messages
+  # )
+  # return response.choices[0].message.content
+  api_key = os.environ['completions_key']
+  url =  os.environ['completions_url']#os.environ['completions_dentsu']
+  hdr ={# Request headers
+        'x-service-line': 'CXM',
+        'x-brand': 'merkle',
+        'x-project': 'Intelligent_M',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'api-version': 'v8',
+        'Ocp-Apim-Subscription-Key': api_key}
+  data ={
+        "model": "GPT4o128k",
+        "messages": messages
+        }  
+  response = requests.post(url=url,headers=hdr , json = data)
+  return response.json().get("choices")[0].get("message").get("content")
 
 def webSearch(searchQuery):
   res = search(searchQuery, num_results=15)
@@ -89,6 +123,6 @@ def gettextfromwebsite(url , all_texts):
   thread = threading.Thread(target=gettextfromwebsitethread , args= (url,all_texts))
   thread.daemon = True
   thread.start()
-  thread.join(1)
+  thread.join(3)
   if thread.is_alive():
         print("Function timed out")

@@ -49,7 +49,7 @@ def getGoogleSearch(userQuery):
     for i in res:
         print(i)
         gettextfromwebsite(i.get('url') , all_texts)
-        if (len(all_texts)>2):
+        if (len(all_texts)>5):
             break
     return all_texts
 
@@ -216,7 +216,7 @@ def chat(request):
                 res = {}
                 updatemsg = getchat[0].messages
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
-                chunks = filecontent.objects.filter(filename="Extentia MSA - IQVIA_FullyExecuted.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+                chunks = filecontent.objects.filter(filename="houseprice.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
                 request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
@@ -237,7 +237,7 @@ def chat(request):
                 datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the document.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
-                    chunks = filecontent.objects.filter(filename="Extentia MSA - IQVIA_FullyExecuted.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+                    chunks = filecontent.objects.filter(filename="houseprice.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
                     request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
                     print(type(request.data["userQuery"]))
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
@@ -383,6 +383,7 @@ def chat(request):
                 
     if(request.data.get("filename")):
             if (request.data.get("filename")[0].lower().endswith(('.pdf'))):
+                
                 filenamelist = request.data.get("filename")
                 res["files"] = filenamelist
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
