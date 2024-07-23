@@ -8,13 +8,14 @@ from operator import itemgetter
 from urllib.parse import urlparse
 import re
 import os
-
+import base64
+from io import BytesIO
+import tempfile
 
 def cleandata(text):
   cleaned_text = text.replace('\n', ' ').replace('\xa0', ' ')
   cleaned_text = re.sub(r'\s+', ' ', cleaned_text)
   return cleaned_text
-
 
 client = OpenAI()
 
@@ -25,8 +26,8 @@ def Get_Embeddings(embedding_string):
   # )
   # feature_vector = response.data[0].embedding
   # return feature_vector
-  api_key = os.environ['embedding_key']
-  url = os.environ["embedding_url"]
+  api_key = "1e0c591a85d344d0bc5bd7eb809ad685"#os.environ['embedding_key']
+  url = "https://ai-api-dev.dentsu.com/openai/deployments/TextEmbeddingAda2/embeddings?api-version=2024-02-01"#os.environ["embedding_url"]
   hdr ={# Request headers
           'x-service-line': 'CXM',
           'x-brand': 'merkle',
@@ -45,27 +46,28 @@ def Get_Embeddings(embedding_string):
 
 def getAnswer(messages):
   
-  # response = client.chat.completions.create(
-  # model="gpt-4o",
-  # messages=messages
-  # )
-  # return response.choices[0].message.content
-  api_key = os.environ['completions_key']
-  url =  os.environ['completions_url']#os.environ['completions_dentsu']
-  hdr ={# Request headers
-        'x-service-line': 'CXM',
-        'x-brand': 'merkle',
-        'x-project': 'Intelligent_M',
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-        'api-version': 'v8',
-        'Ocp-Apim-Subscription-Key': api_key}
-  data ={
-        "model": "GPT4o128k",
-        "messages": messages
-        }  
-  response = requests.post(url=url,headers=hdr , json = data)
-  return response.json().get("choices")[0].get("message").get("content")
+  response = client.chat.completions.create(
+  model="gpt-4o",
+  messages=messages
+  )
+  return response.choices[0].message.content
+  # api_key = "f9b9ff0924a24048a80d82b259c3f647"#os.environ['completions_key']
+  # url =  "https://ai-api-dev.dentsu.com/openai/deployments/GPT4o128k/chat/completions?api-version=2024-02-01"#os.environ['completions_url']#os.environ['completions_dentsu']
+  # hdr ={# Request headers
+  #       'x-service-line': 'CXM',
+  #       'x-brand': 'merkle',
+  #       'x-project': 'Intelligent_M',
+  #       'Content-Type': 'application/json',
+  #       'Cache-Control': 'no-cache',
+  #       'api-version': 'v8',
+  #       'Ocp-Apim-Subscription-Key': api_key}
+  # data ={
+  #       "model": "GPT4o128k",
+  #       "messages": messages
+  #       }  
+  # response = requests.post(url=url,headers=hdr , json = data)
+  # print(response.json())
+  # return response.json().get("choices")[0].get("message").get("content")
 
 def webSearch(searchQuery):
   res = search(searchQuery, num_results=15)
@@ -126,3 +128,207 @@ def gettextfromwebsite(url , all_texts):
   thread.join(3)
   if thread.is_alive():
         print("Function timed out")
+
+
+
+def speechtotext(audio_file):
+  transcription = client.audio.transcriptions.create(
+    model="whisper-1", 
+    file=audio_file
+  )
+  final_input = transcription.text
+  return (final_input)
+
+
+# def translatetexttoEnglish(sourceText , sourceLang, targetLang):
+#   api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"
+#   headers = {
+#     "Content-Type": "application/json",
+#     "Authorization": api_key
+#   }
+#   payload = {
+#     "pipelineTasks": [
+#         {
+#             "taskType": "translation",
+#             "config": {
+#                 "language": {
+#                     "sourceLanguage": "mr",
+#                     "targetLanguage": "en"
+#                 },
+#                 "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
+#             }
+#         }
+#     ],
+#     "inputData": {
+#         "input": [
+#             {
+#                 "source": "नमस्कार माझा"
+#             }
+#         ]
+#     }
+#   }
+#   response = requests.post("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", headers=headers, json=payload)
+#   print(response.json())
+
+def translateAudioToEnglish(base64Audio, sourceLang, targetLang):
+  api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"
+  headers = {
+    "Content-Type": "application/json",
+    "Authorization": api_key
+  }
+  dataAsr = {
+    "bn":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "en":"ai4bharat/whisper-medium-en--gpu--t4",
+    "gu":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "hi":"ai4bharat/conformer-hi-gpu--t4",
+    "kn":"ai4bharat/conformer-multilingual-dravidian-gpu--t4",
+    "ml":"ai4bharat/conformer-multilingual-dravidian-gpu--t4",
+    "mr":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "or":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "pa":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "sa":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4",
+    "ta":"ai4bharat/conformer-multilingual-dravidian-gpu--t4",
+    "te":"ai4bharat/conformer-multilingual-dravidian-gpu--t4",
+    "ur":"ai4bharat/conformer-multilingual-indo_aryan-gpu--t4"
+  }
+
+  payload = {
+    "pipelineTasks": [
+        {
+            "taskType": "asr",
+            "config": {
+                "language": {
+                    "sourceLanguage": sourceLang
+                },
+                "serviceId": dataAsr[sourceLang]
+            }
+        },
+        {
+            "taskType": "translation",
+            "config": {
+                "language": {
+                    "sourceLanguage": sourceLang,
+                    "targetLanguage": targetLang
+                },
+                "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
+            }
+        }
+    ],
+    "inputData": 
+    {
+        "audio": 
+        [
+            {
+                "audioContent": base64Audio
+            }
+        ]
+    }
+  }
+  response = requests.post("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", headers=headers, json=payload)
+  transresp = response.json().get("pipelineResponse")[1].get("output")[0].get("target")
+  return transresp
+
+
+def Get_Base64(request):  #Returns the base64 of an image from the temp memory file
+    return base64.b64encode(BytesIO(request.data.get('audio').read()).getvalue()).decode('utf-8')
+
+
+def translatetexttonative(text, sourceLang , targetLang):
+  api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"
+  headers = {
+    "Content-Type": "application/json",
+    "Authorization": api_key
+  }
+  payload = {
+    "pipelineTasks": [
+        {
+            "taskType": "translation",
+            "config": {
+                "language": {
+                    "sourceLanguage": sourceLang,
+                    "targetLanguage": targetLang
+                },
+                "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
+            }
+        }
+    ],
+    "inputData": {
+        "input": [
+            {
+                "source": text
+            }
+        ]
+    }
+  }
+  response = requests.post("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", headers=headers, json=payload)
+  return response.json().get("pipelineResponse")[0].get("output")[0].get("target")
+
+
+
+
+def texttospeech(text , sourceLang):
+  api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"
+  headers = {
+    "Content-Type": "application/json",
+    "Authorization": api_key
+  }
+  dataTTS = {
+    "en":"ai4bharat/indic-tts-coqui-misc-gpu--t4",
+    "as":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "brx":"ai4bharat/indic-tts-coqui-misc-gpu--t4",
+    "gu":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "hi":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "kn":"ai4bharat/indic-tts-coqui-dravidian-gpu--t4",
+    "ml":"ai4bharat/indic-tts-coqui-dravidian-gpu--t4",
+    "mni":"ai4bharat/indic-tts-coqui-misc-gpu--t4",
+    "mr":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "or":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "pa":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4",
+    "ta":"ai4bharat/indic-tts-coqui-dravidian-gpu--t4",
+    "te":"ai4bharat/indic-tts-coqui-dravidian-gpu--t4",
+    "bn":"ai4bharat/indic-tts-coqui-indo_aryan-gpu--t4"
+  }
+
+  payload = {
+    "pipelineTasks": [
+        {
+            "taskType": "tts",
+            "config": {
+                "language": {
+                    "sourceLanguage": sourceLang
+                },
+                "serviceId": dataTTS[sourceLang] ,
+                "gender": "female"
+            }
+        }
+    ],
+    "inputData": {
+        "input": [
+            {
+                "source": text
+            }
+        ]
+    }
+  }
+
+  response = requests.post("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", headers=headers, json=payload)
+  bs64 = response.json().get("pipelineResponse")[0].get("audio")[0].get("audioContent")
+  bytes = base64.b64decode(bs64, validate=True)
+  temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+  speech_file_path = temp1.name
+  f = open(speech_file_path, 'wb')
+  f.write(bytes)
+  f.close()
+  return speech_file_path
+
+
+def texttospeechopenai(text):
+  temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+  speech_file_path = temp1.name
+  response = client.audio.speech.create(
+      model="tts-1",
+      voice="alloy",
+      input=text
+    )
+  response.stream_to_file(speech_file_path)
+  return speech_file_path

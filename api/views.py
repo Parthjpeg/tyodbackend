@@ -9,6 +9,10 @@ from pgvector.django import L2Distance
 import pandas as pd
 import numpy
 import threading
+import tempfile
+import json
+from django.http import FileResponse
+import time
 
 
 def getfiledata(filelist , userQuery):
@@ -288,6 +292,7 @@ def chat(request):
                     request.data["userQuery"] = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
@@ -295,13 +300,6 @@ def chat(request):
                     return Response(serializer.errors)
                 return Response({"answer":answer})
                 
-
-
-
-
-
-
-
         elif(request.data.get("Function") == "intSearch"):
             if(len(getchat)>0):
                 res = {}
@@ -330,10 +328,11 @@ def chat(request):
                 datatosend["messages"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": """you are an internet search bot the user will ask a query and your job is to answer that query. The data required to answer that query will be provided within the query in the following format UserQuery : UserQuery , Data : [url:url , data:data , url2:url2 , data2:data2]."""})
                 if(request.data.get("userQuery")):
-                    request.data["userQuery"] = "USER QUERY - {"+ request.data["userQuery"] + "} Data " +str(getGoogleSearch(request.data.get("userQuery")))
-                    print(request.data["userQuery"])
+                    gsearch = str(getGoogleSearch(request.data.get("userQuery")))
+                    request.data["userQuery"] = "USER QUERY - {"+ request.data["userQuery"] + "} Data " + gsearch
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
@@ -341,7 +340,172 @@ def chat(request):
                     return Response(serializer.errors)
                 print(answer)
                 return Response({"answer":answer})
+            
 
+        elif(request.data.get("Function") == "multilang"):
+            if(len(getchat)>0):
+                res = {}
+                updatemsg = getchat[0].messages
+                if(request.data.get("audio")):
+                    if(request.data.get("filename")):
+                        request.data["filename"] = json.loads(request.data.get("filename"))
+                        base64audio = Get_Base64(request)
+                        sourceLang = request.data.get("Sr")
+                        targetLang = request.data.get("Tr")
+                        textInputenglish = translateAudioToEnglish(base64audio , sourceLang , targetLang)
+                        request.data["userQuery"] = textInputenglish
+                    else:
+                        print("in else")
+                        audioFileName = str(request.data.get("audio"))
+                        filename, file_extension = os.path.splitext(audioFileName)
+                        audiofile = request.FILES["audio"]
+                        temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+                        filepath = temp.name
+                        for chunk in audiofile.chunks():
+                            temp.write(chunk)
+                        temp.close()
+                        audio_file= open(filepath, "rb")
+                        textinput = speechtotext(audio_file)
+                        request.data["userQuery"] = textinput
+                elif(request.data.get("userQuery")):
+                    if(request.data.get("filename")):
+                        sourceLang = request.data.get("Sr")
+                        targetLang = request.data.get("Tr")
+                        request.data["userQuery"] = translatetexttonative( request.data.get("userQuery") , sourceLang , targetLang)
+
+                if(request.data.get("filename")):
+                    print(type(request.data.get("filename")))
+                    res["files"] = request.data.get("filename")
+                else:
+                    res["files"] = []
+                res["messages"] = {"history":[]}
+
+                if(request.data.get("SysMsg")):
+                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                if(request.data.get("userQuery") and len(res["files"])>=1):
+                    print("in if")
+                    res["files"] = request.data.get("filename")
+                    sourceLang = request.data.get("Tr")
+                    targetLang = request.data.get("Sr")
+                    userQueryEnglish = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
+                    request.data["userQuery"] = translatetexttonative(userQueryEnglish , sourceLang, targetLang)
+                    updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(updatemsg["history"])
+                    updatemsg["history"].append({"role": "assistant", "content":answer})
+                    res["messages"] = updatemsg
+                    serializer = ChatSerializer(getchat[0], data=res, partial=True)
+                    print(answer)
+                    if serializer.is_valid():
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors)
+                    if(request.data.get("audio")):
+                        filepath = texttospeech(answer , targetLang)
+                        time.sleep(2)
+                        response = FileResponse(open(filepath, 'rb'))
+                        return response
+                    else:
+                        return Response({"answer":answer})
+                else:
+                    updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(updatemsg["history"])
+                    updatemsg["history"].append({"role": "assistant", "content":answer})
+                    res["messages"] = updatemsg
+                    serializer = ChatSerializer(getchat[0], data=res , partial=True)
+                    if(serializer.is_valid()):
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors)
+                    if(request.data.get("audio")):
+                        filepath = texttospeechopenai(answer)
+                        time.sleep(2)
+                        response = FileResponse(open(filepath, 'rb'))
+                        return response
+                    else:
+                        return Response({"answer":answer})
+
+            else:
+                print("in else")
+                answer = "Multilang chat created"
+                if(request.data.get("audio")):
+                    if(request.data.get("filename")):
+                        request.data["filename"] = json.loads(request.data.get("filename"))
+                        base64audio = Get_Base64(request)
+                        sourceLang = request.data.get("Sr")
+                        targetLang = request.data.get("Tr")
+                        textInputenglish = translateAudioToEnglish(base64audio , sourceLang , targetLang)
+                        request.data["userQuery"] = textInputenglish
+                        print(request.data["userQuery"])
+                    else:
+                        audioFileName = str(request.data.get("audio"))
+                        filename, file_extension = os.path.splitext(audioFileName)
+                        audiofile = request.FILES["audio"]
+                        temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+                        filepath = temp.name
+                        for chunk in audiofile.chunks():
+                            temp.write(chunk)
+                        temp.close()
+                        audio_file= open(filepath, "rb")
+                        textinput = speechtotext(audio_file)
+                        request.data["userQuery"] = textinput
+                elif(request.data.get("userQuery")):
+                    if(request.data.get("filename")):
+                        sourceLang = request.data.get("Sr")
+                        targetLang = request.data.get("Tr")
+                        request.data["userQuery"] = translatetexttonative( request.data.get("userQuery") , sourceLang , targetLang)
+                datatosend = {"name":request.data.get("name")}
+                datatosend["function"] = request.data.get("Function")
+                if(request.data.get("filename")):
+                    print(type(request.data.get("filename")))
+                    datatosend["files"] = request.data.get("filename")
+                else:
+                    datatosend["files"] = []
+                datatosend["messages"] = {"history":[]}
+                if(request.data.get("SysMsg")):
+                    datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+                else:
+                    datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                if(request.data.get("userQuery") and len(datatosend["files"])>=1):
+                    print(type(datatosend["files"]))
+                    sourceLang = request.data.get("Tr")
+                    targetLang = request.data.get("Sr")
+                    userQueryEnglish = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
+                    request.data["userQuery"] = translatetexttonative(userQueryEnglish , sourceLang, targetLang)
+                    print(request.data["userQuery"])
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    serializer = ChatSerializer(data=datatosend , partial=True)
+                    if(serializer.is_valid()):
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors)
+                    if(request.data.get("audio")):
+                        filepath = texttospeech(answer , targetLang)
+                        time.sleep(2)
+                        response = FileResponse(open(filepath, 'rb'))
+                        return response
+                    else:
+                        return Response({"answer":answer})
+                elif(request.data.get("userQuery")):
+                    datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    answer = getAnswer(datatosend["messages"]["history"])
+                    datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    serializer = ChatSerializer(data=datatosend , partial=True)
+                    if(serializer.is_valid()):
+                        serializer.save()
+                    else:
+                        return Response(serializer.errors)
+                    if(request.data.get("audio")):
+                        filepath = texttospeechopenai(answer)
+                        time.sleep(2)
+                        response = FileResponse(open(filepath, 'rb'))
+                        return response
+                    else:
+                        return Response({"answer":answer})
+        
         else:
             if(len(getchat)>0):
                 res = {}
