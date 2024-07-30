@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from api.views import *
+from api.tvsmviews import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('chat/', chat),
@@ -26,5 +27,10 @@ urlpatterns = [
     path('getchathistory/',getchathistory),
     path('searchxls/' , searchxls),
     path('deletechat/', deletechat),
-    path('renamechat/',renamechat)
+    path('renamechat/',renamechat),
+    path('addprod/' , Add_product),
+    path('tvsmchat/' , tvsmchat),
+    path('testfile/' , fileresptest),
+    path('audiotobs64/' , audiotobs64),
+    path('bs64toaudio/' , bs64toaudio)
 ]

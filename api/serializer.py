@@ -22,3 +22,8 @@ class exexcelfilecontentSerializer(serializers.ModelSerializer):
     class Meta:
         model = excelfilecontent
         fields = '__all__'
+
+class tvsmSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tvsm_Vehicles
+        fields = '__all__'

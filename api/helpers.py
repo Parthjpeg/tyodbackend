@@ -20,29 +20,30 @@ def cleandata(text):
 client = OpenAI()
 
 def Get_Embeddings(embedding_string):
-  # response = client.embeddings.create(
-  #   input= embedding_string,
-  #   model="text-embedding-ada-002"
-  # )
-  # feature_vector = response.data[0].embedding
-  # return feature_vector
-  api_key = "1e0c591a85d344d0bc5bd7eb809ad685"#os.environ['embedding_key']
-  url = "https://ai-api-dev.dentsu.com/openai/deployments/TextEmbeddingAda2/embeddings?api-version=2024-02-01"#os.environ["embedding_url"]
-  hdr ={# Request headers
-          'x-service-line': 'CXM',
-          'x-brand': 'merkle',
-          'x-project': 'Intelligent_M',
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-          'api-version': 'v8',
-          'Ocp-Apim-Subscription-Key': api_key}
-  data =  {
-      "input": embedding_string,
-      "user": "string",
-      "input_type": "query"
-  }
-  response = requests.post(url=url,headers=hdr , json = data)
-  return response.json().get('data')[0].get('embedding')
+  response = client.embeddings.create(
+    input= embedding_string,
+    model="text-embedding-ada-002"
+  )
+  feature_vector = response.data[0].embedding
+  return feature_vector
+  # api_key = "1e0c591a85d344d0bc5bd7eb809ad685"#os.environ['embedding_key']
+  # url = "https://ai-api-dev.dentsu.com/openai/deployments/TextEmbeddingAda2/embeddings?api-version=2024-02-01"#os.environ["embedding_url"]
+  # hdr ={# Request headers
+  #         'x-service-line': 'CXM',
+  #         'x-brand': 'merkle',
+  #         'x-project': 'Intelligent_M',
+  #         'Content-Type': 'application/json',
+  #         'Cache-Control': 'no-cache',
+  #         'api-version': 'v8',
+  #         'Ocp-Apim-Subscription-Key': api_key}
+  # data =  {
+  #     "input": embedding_string,
+  #     "user": "string",
+  #     "input_type": "query"
+  # }
+  # response = requests.post(url=url,headers=hdr , json = data)
+  # print(response.json())
+  # return response.json().get('data')[0].get('embedding')
 
 def getAnswer(messages):
   

@@ -176,6 +176,7 @@ def chat(request):
                         dist = numpy.linalg.norm(query_vector-feature_vector)
                         if(dist<0.7):
                             s = s+ " " + realdata["alldata"]
+                print(s)
                 request.data["userQuery"] =  "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
