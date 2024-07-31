@@ -82,7 +82,7 @@ def tvsmchat(request):
             else:
                 response = {"history":messages , "question": assistant_resp}
             if(audio_flag):
-                filepath = texttospeechtvsm(assistant_resp)
+                filepath = texttospeechtvsmwhisper(assistant_resp)
                 file = open(filepath, 'rb')
                 bs64 = Get_Base64_tvsm(file)
                 response["audio_base64"] = bs64
@@ -142,7 +142,7 @@ def tvsmchat(request):
         query_vector = Get_Embeddings(stringtovector)
         queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users')[:1]
         print(queryset[0].get("vehicle_description"))
-        sys_msg = "you provide information about vehicles the information you need to provide is already present in the userQuery what you need to do is take that information and create an awesome summary about why the user needs to buy that vehical, Whenever you use the vehical name make sure its in all CAPS. eg if the name is tvs jupyter make it TVS JUPYTER."
+        sys_msg = "you provide information about vehicles the information you need to provide is already present in the userQuery what you need to do is take that information and create an awesome summary about why the user needs to buy that vehical, Whenever you use the vehical name make sure its in all CAPS. eg if the name is tvs jupyter make it TVS JUPYTER. Also always end with click on the button below to book the vehical or you can also book a test ride"
         messages = [{"role":"system" , "content":sys_msg}]
         userq = f"""The name of this vehical is{queryset[0].get("vehicle_name")} , the cost of this vehical is {queryset[0].get("vehicle_price")} , type of vehical is {queryset[0].get("vehicle_type")} the fuel which the vehical uses is {queryset[0].get("vehicle_fuel_type")}, this vehical is mostly used for {queryset[0].get("vehicle_prime_users")}"""
         messages.append({"role":"user" , "content":userq})
@@ -150,7 +150,7 @@ def tvsmchat(request):
         if(sourceLang == "en"):
             response = {"vehical":queryset[0] , "description":assistant_resp}
             if(audio_flag):
-                filepath = texttospeechtvsm(assistant_resp)
+                filepath = texttospeechtvsmwhisper(assistant_resp)
                 file = open(filepath, 'rb')
                 bs64 = Get_Base64_tvsm(file)
                 response["audio_base64"] = bs64
@@ -194,3 +194,106 @@ def bs64toaudio(request):
     f.write(bytes)
     f.close()
     return FileResponse(open(speech_file_path, 'rb'))
+
+
+@api_view(['Post'])
+def Add_Tvsm_Accessories(request):
+    if(request.data):
+        product_name = request.data.get('product_name')
+        vehicle_name = request.data.get('vehicle_name')
+        product_price = request.data.get('product_price')
+        product_primary_color = request.data.get('product_primary_color')
+        product_accent_color = request.data.get('product_accent_color')
+        product_description = request.data.get('product_description')
+        product_user = request.data.get('product_user')
+        embedding_string = f"""{product_name} this helmet is best suited for the vehical {vehicle_name}, the primary color of this helmet is {product_primary_color} with accents of {product_accent_color}, this helmet is intended for {product_user}. The cost of this helmet is {product_price}. This helmet is best described as {product_description}"""
+        feature_vector = Get_Embeddings(embedding_string)
+        request.data['feature_vector'] = feature_vector
+        serializers = tvsmAccessoriesSerializer(data=request.data)
+        if serializers.is_valid():
+            serializers.save()
+            return Response(serializers.data,status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+@api_view(['Post'])
+def chatAccessories(request):
+    engqueryacc = ""
+    message = []
+    userQuery = request.data.get("userQuery") 
+    audio_flag = False
+    sys_msg = "Your job is to write custom product descriptions based on the user query and some information about the product. Make the descriptions compelling."
+    err_sysmsg = "The user has asked a query which is not related to helmets please write a message in which we would decline to answer and bring the conversation back to helmets"
+    sourceLang = request.data.get("sourceLang")
+    if(sourceLang == "en"):
+        if(request.data.get("bs64audio")):
+            audio_flag = True
+            bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
+            temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+            speech_file_path = temp1.name
+            f = open(speech_file_path, 'wb')
+            f.write(bytes)
+            f.close()
+            audio_file= open(speech_file_path, "rb")
+            userQuery = speechtotext(audio_file)
+            print(userQuery)
+        query_vector = Get_Embeddings(userQuery)
+        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "distance")[:1]
+        print(queryset[0].get("distance"))
+        if(queryset[0].get("distance")>0.65):
+            message.append({"role":"system" , "content":err_sysmsg})
+            message.append({"role":"user" , "content":userQuery})
+            assistant_response = naturallm(message)
+            return Response({"err":assistant_response})
+        product_description = queryset[0].get("product_description")
+        product_name = queryset[0].get("product_name")
+        product_price = queryset[0].get("product_price")
+        vehicle_name = queryset[0].get("vehicle_name")
+        product_user = queryset[0].get("product_user")
+        finalinput = f"""User Query - {userQuery} , Information about the helmet - This helmet is described as {product_description} the name of this helmet is {product_name}. This helmet costs {product_price}. This helmet is best suited for the vehical {vehicle_name}. This product is made for {product_user}"""
+        message.append({"role":"system" , "content":sys_msg})
+        message.append({"role":"user" , "content":finalinput})
+        assistant_response = naturallm(message)
+        response = {"Product" : queryset[0] , "Description": assistant_response}
+        if(audio_flag):
+            # filepath = texttospeechtvsmwhisper(assistant_response)
+            # file = open(filepath, 'rb')
+            # bs64 = Get_Base64_tvsm(file)
+            bs64 = texttospeechtvsm(assistant_response , sourceLang)
+            response["audio_base64"] = bs64
+        return Response(response)
+    else:
+        if(request.data.get("bs64audio")):
+            print("in if")
+            audio_flag = True
+            engqueryacc = translateAudioToEnglishTvsm(request.data.get("bs64audio") , sourceLang , "en")
+            print(engqueryacc)
+        else:
+            engqueryacc = translatetext(userQuery , sourceLang , "en")
+        print(engqueryacc)
+        query_vector = Get_Embeddings(engqueryacc)
+        print(engqueryacc)
+        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "product_user","distance")[:1]
+        if(queryset[0].get("distance")>0.65):
+            message.append({"role":"system" , "content":err_sysmsg})
+            message.append({"role":"user" , "content":userQuery})
+            assistant_response = naturallm(message)
+            resp_in_native_language = translatetext(assistant_response , "en" , sourceLang)
+            return Response({"err":resp_in_native_language})
+        product_description = queryset[0].get("product_description")
+        product_name = queryset[0].get("product_name")
+        product_price = queryset[0].get("product_price")
+        vehicle_name = queryset[0].get("vehicle_name")
+        product_user = queryset[0].get("product_user")
+        finalinput = f"""User Query - {engqueryacc} , Information about the helmet - This helmet is described as {product_description} the name of this helmet is {product_name}. This helmet costs {product_price}. This helmet is best suited for the vehical {vehicle_name}. This product is made for {product_user}"""
+        message.append({"role":"system" , "content":sys_msg})
+        message.append({"role":"user" , "content":finalinput})
+        assistant_response = naturallm(message)
+        resp_in_native_language = translatetext(assistant_response , "en" , sourceLang)
+        response = {"Product" : queryset[0] , "Description": resp_in_native_language}
+        if(audio_flag):
+            bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
+            response["audio_base64"] = bs64
+        return Response(response)
+        

@@ -59,7 +59,7 @@ def speechtotexttvsm(audio_file):
   final_input = transcription.text
   return (final_input)
 
-def texttospeechtvsm(text):
+def texttospeechtvsmwhisper(text):
   temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
   speech_file_path = temp1.name
   response = client.audio.speech.create(

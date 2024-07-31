@@ -32,5 +32,7 @@ urlpatterns = [
     path('tvsmchat/' , tvsmchat),
     path('testfile/' , fileresptest),
     path('audiotobs64/' , audiotobs64),
-    path('bs64toaudio/' , bs64toaudio)
+    path('bs64toaudio/' , bs64toaudio),
+    path('addaccessories/', Add_Tvsm_Accessories),
+    path('chattvsmaccessories/' , chatAccessories)
 ]

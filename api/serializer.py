@@ -27,3 +27,8 @@ class tvsmSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tvsm_Vehicles
         fields = '__all__'
+
+class tvsmAccessoriesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tvsm_Accessories
+        fields = '__all__'

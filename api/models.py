@@ -41,7 +41,7 @@ class Tvsm_Accessories(models.Model):
     product_price = models.IntegerField()
     product_primary_color = models.CharField(max_length=100)
     product_accent_color = models.CharField(max_length=100)
-    product_description = models.CharField(max_length=100)
+    product_description = models.CharField(max_length=1500)
     product_user = models.CharField(max_length=100)
     feature_vector = VectorField(dimensions=1536)
 
