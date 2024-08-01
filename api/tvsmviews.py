@@ -140,7 +140,7 @@ def tvsmchat(request):
                 engquery = translatetext(userQuery , sourceLang , "en")
             stringtovector = "the budget of the user is " + substring + "The user will use it for - " + engquery
         query_vector = Get_Embeddings(stringtovector)
-        queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users')[:1]
+        queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users' , 'vehical_link' , 'vehical_img_link' , 'vehical_testdrive_link' , 'vehical_booking_link')[:1]
         print(queryset[0].get("vehicle_description"))
         sys_msg = "you provide information about vehicles the information you need to provide is already present in the userQuery what you need to do is take that information and create an awesome summary about why the user needs to buy that vehical, Whenever you use the vehical name make sure its in all CAPS. eg if the name is tvs jupyter make it TVS JUPYTER. Also always end with click on the button below to book the vehical or you can also book a test ride"
         messages = [{"role":"system" , "content":sys_msg}]
@@ -239,7 +239,7 @@ def chatAccessories(request):
             userQuery = speechtotext(audio_file)
             print(userQuery)
         query_vector = Get_Embeddings(userQuery)
-        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "distance")[:1]
+        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "distance" , "product_link" , "product_img_link")[:1]
         print(queryset[0].get("distance"))
         if(queryset[0].get("distance")>0.65):
             message.append({"role":"system" , "content":err_sysmsg})
@@ -274,7 +274,7 @@ def chatAccessories(request):
         print(engqueryacc)
         query_vector = Get_Embeddings(engqueryacc)
         print(engqueryacc)
-        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "product_user","distance")[:1]
+        queryset = Tvsm_Accessories.objects.annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values("product_name" , "vehicle_name", "product_price", "product_description", "product_user","distance", "product_link" , "product_img_link")[:1]
         if(queryset[0].get("distance")>0.65):
             message.append({"role":"system" , "content":err_sysmsg})
             message.append({"role":"user" , "content":userQuery})
@@ -295,5 +295,4 @@ def chatAccessories(request):
         if(audio_flag):
             bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
             response["audio_base64"] = bs64
-        return Response(response)
-        
+        return Response(response)   

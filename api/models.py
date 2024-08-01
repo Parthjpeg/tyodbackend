@@ -33,6 +33,7 @@ class Tvsm_Vehicles(models.Model):
     vehical_link = models.CharField(max_length=200 , null=True)
     vehical_img_link = models.CharField(max_length=200 , null=True)
     vehical_testdrive_link = models.CharField(max_length=200 , null=True)
+    vehical_booking_link = models.CharField(max_length=200 , null=True)
     feature_vector = VectorField(dimensions=1536)
 
 class Tvsm_Accessories(models.Model):
@@ -43,6 +44,8 @@ class Tvsm_Accessories(models.Model):
     product_accent_color = models.CharField(max_length=100)
     product_description = models.CharField(max_length=1500)
     product_user = models.CharField(max_length=100)
+    product_link = models.CharField(max_length=200 , null=True)
+    product_img_link = models.CharField(max_length=200 , null=True)
     feature_vector = VectorField(dimensions=1536)
 
 # electric or petrol
