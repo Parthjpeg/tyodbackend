@@ -210,22 +210,22 @@ def chat(request):
                 updatemsgtoshow["history"].append({"role": "assistant", "content": answer})
                 res["messages"] = updatemsg
                 res["messagestoshow"] = updatemsgtoshow
-                if(len(updatemsg["history"]) == 5):
-                    sys_message = "you look at the user conversation history and name the chat according to it"
-                    namechat = updatemsg["history"].copy()
-                    namechat[0] = {"role": "system", "content": sys_message}
-                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
-                    print(namechat)
-                    newname = getAnswer(namechat)
-                    try:
-                        chattodelete = Chat.objects.get(name = chatname)
-                        chattodelete.name = newname
-                        chattodelete.save()
-                        chattodelete = Chat.objects.get(name = chatname)
-                        chattodelete.delete()
-                        getchat = Chat.objects.filter(name=newname)
-                    except:
-                        return Response({"message":"Something went wrong"})
+                # if(len(updatemsg["history"]) == 5):
+                #     sys_message = "you look at the user conversation history and name the chat according to it"
+                #     namechat = updatemsg["history"].copy()
+                #     namechat[0] = {"role": "system", "content": sys_message}
+                #     namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                #     print(namechat)
+                #     newname = getAnswer(namechat)
+                #     try:
+                #         chattodelete = Chat.objects.get(name = chatname)
+                #         chattodelete.name = newname
+                #         chattodelete.save()
+                #         chattodelete = Chat.objects.get(name = chatname)
+                #         chattodelete.delete()
+                #         getchat = Chat.objects.filter(name=newname)
+                #     except:
+                #         return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
