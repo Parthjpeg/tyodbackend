@@ -69,7 +69,7 @@ def getfilenames(request):
 
 @api_view(["POSt"])
 def getchathistory(request):
-    chathistory = Chat.objects.filter(name = request.data.get("chatname")).values("name" , "messages" , "files")
+    chathistory = Chat.objects.filter(name = request.data.get("chatname")).values("name" , "messagestoshow" , "files")
     return Response(chathistory[0])
 
 @api_view(["POST"])
@@ -112,6 +112,7 @@ def chat(request):
                 s = ""
                 answer = ""
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 data = excelfilecontent.objects.filter(filename="Amc.xlsx").values('filename' , 'content')
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -121,17 +122,36 @@ def chat(request):
                         dist = numpy.linalg.norm(query_vector-feature_vector)
                         if(dist<0.75):
                             s = s+ " " + realdata["alldata"]
+                updatemsgtoshow["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
                 updatemsg["history"].append({"role": "assistant", "content": answer})
+                updatemsgtoshow["history"].append({"role": "assistant", "content": answer})
                 res["messages"] = updatemsg
+                res["messagestoshow"] = updatemsgtoshow
+                if(len(updatemsg["history"]) == 5):
+                    sys_message = "you look at the user conversation history and name the chat according to it"
+                    namechat = updatemsg["history"].copy()
+                    namechat[0] = {"role": "system", "content": sys_message}
+                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                    print(namechat)
+                    newname = getAnswer(namechat)
+                    try:
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.name = newname
+                        chattodelete.save()
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.delete()
+                        getchat = Chat.objects.filter(name=newname)
+                    except:
+                        return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                 else:
                     return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":getchat[0].name})
             else:
                 print("in else")
                 answer = "TyodAmc Chat created"
@@ -141,7 +161,9 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
+                datatosend["messagestoshow"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="Amc.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -151,22 +173,25 @@ def chat(request):
                             dist = numpy.linalg.norm(query_vector-feature_vector)
                             if(dist<0.75):
                                 s = s+ " " + realdata["alldata"]
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
                 else:
                     return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":request.data.get("name")})
         elif(request.data.get("Function") == "TyodMis"):
             if(len(getchat)>0):
                 res = {}
                 s = ""
                 answer = ""
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -177,17 +202,36 @@ def chat(request):
                         if(dist<0.7):
                             s = s+ " " + realdata["alldata"]
                 print(s)
+                updatemsgtoshow["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 request.data["userQuery"] =  "UserQuery - "+request.data["userQuery"] + " Data " + s
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
                 updatemsg["history"].append({"role": "assistant", "content": answer})
+                updatemsgtoshow["history"].append({"role": "assistant", "content": answer})
                 res["messages"] = updatemsg
+                res["messagestoshow"] = updatemsgtoshow
+                if(len(updatemsg["history"]) == 5):
+                    sys_message = "you look at the user conversation history and name the chat according to it"
+                    namechat = updatemsg["history"].copy()
+                    namechat[0] = {"role": "system", "content": sys_message}
+                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                    print(namechat)
+                    newname = getAnswer(namechat)
+                    try:
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.name = newname
+                        chattodelete.save()
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.delete()
+                        getchat = Chat.objects.filter(name=newname)
+                    except:
+                        return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                 else:
                     return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":getchat[0].name})
 
             else:
                 answer = "TyodMis Chat created"
@@ -196,7 +240,9 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "You are a workforce management expert who provides responses to user queries based on search results from an MIS database. Users who interact with you are usually looking for human resources with specific skillset, experience, availability etc. You job is to look at the user query and use provided data to answer the questions. Sometimes the user might ask for. the data to be published in specific formats which you should address.   CONVERSATION FLOW:  The format of the chat sessions would be: User Query: (user query); Data to refer to: (data)    TASKS: Your primary task is to look at the conversation history, look at the current user query, and then respond appropriately based on the provided data from MIS database and in context of the conversation, derived from chat history.  If the user query has a greeting message, then irrespective of what the provided data is, you job is to greet back and inform the user about your role and what you can help with While responding to user queries you must use the provided data from MIS while taking into account the chat history provided If the user asks for a detailed report on a specific resource then you must provide tabular data including all available data points on the resource For any given user query, If the data provided to answer the query is not adequate then your response should be appropriately designed to address that lack of information within the MIS RESTRICTIONS: If the user query is about anything outside of your area of expertise, as defined, you must not engage the user further but politely remind the user of your role and purpose"})
+                datatosend["messagestoshow"]["history"].append({"role": "system", "content": "you are a expert who will give insights on the data provided with the user query based on the data provided within the user query answer the questions. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the excel sheet.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})                
                 if(request.data.get("userQuery")):
                     data = excelfilecontent.objects.filter(filename="Mis.xlsx").values('filename' , 'content')
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
@@ -206,27 +252,49 @@ def chat(request):
                             dist = numpy.linalg.norm(query_vector-feature_vector)
                             if(dist<0.7):
                                 s = s+ " " + realdata["alldata"]
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     request.data["userQuery"] = "UserQuery - "+request.data["userQuery"] + " Data to refer to " + s
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
                 else:
                     return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":request.data.get("name")})
         elif(request.data.get("Function") == "TyodDoc"):
             if(len(getchat)>0):
                 res = {}
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
                 query_vector = Get_Embeddings(request.data.get("userQuery"))
                 chunks = filecontent.objects.filter(filename="houseprice.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
+                updatemsgtoshow["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
                 updatemsg["history"].append({"role": "user", "content": request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
+                updatemsgtoshow["history"].append({"role": "assistant", "content": answer})
                 updatemsg["history"].append({"role": "assistant", "content": answer})
                 res["messages"] = updatemsg
+                res["messagestoshow"] = updatemsgtoshow
+                if(len(updatemsg["history"]) == 5):
+                    sys_message = "you look at the user conversation history and name the chat according to it"
+                    namechat = updatemsg["history"].copy()
+                    namechat[0] = {"role": "system", "content": sys_message}
+                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                    print(namechat)
+                    newname = getAnswer(namechat)
+                    try:
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.name = newname
+                        chattodelete.save()
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.delete()
+                        getchat = Chat.objects.filter(name=newname)
+                    except:
+                        return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
@@ -239,8 +307,10 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": "you summarize and answer questions based on the data provided in the user query. answer according to the question the user is asking IF THE QUESTION CANNOT BE ANSWERED WITH THE DATA PROVIDED DONT ANSWER. If the user Query isnt supported with data that means we could not find data in the document.  The fromat will be User Query - (user query) data to refer to -  (data). Your job is to only answer according to the user query."})
                 if(request.data.get("userQuery")):
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     query_vector = Get_Embeddings(request.data.get("userQuery"))
                     chunks = filecontent.objects.filter(filename="houseprice.pdf").annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('chunk','distance')[:3]
                     request.data["userQuery"] = "User Query - " + request.data.get("userQuery") + " "+ "Data to refer to - " +  chunks[0].get("chunk") + " " + chunks[1].get("chunk") + " " + chunks[1].get("chunk")
@@ -248,6 +318,7 @@ def chat(request):
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
@@ -261,23 +332,44 @@ def chat(request):
         elif(request.data.get("Function") == "Tyod"):
             if(len(getchat)>0):
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
                 res["files"] = request.data.get("filename")
                 if(request.data.get("SysMsg")):
                     updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                    updatemsgtoshow["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
                 else:
                     updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
-                
+                    updatemsgtoshow["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                updatemsgtoshow["history"].append({"role": "user", "content":request.data.get("userQuery")})
                 request.data["userQuery"] = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
                 updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
                 updatemsg["history"].append({"role": "assistant", "content":answer})
+                updatemsgtoshow["history"].append({"role": "assistant", "content": answer})
                 res["messages"] = updatemsg
+                res["messagestoshow"] = updatemsgtoshow
+                if(len(updatemsg["history"]) == 5):
+                    sys_message = "you look at the user conversation history and name the chat according to it"
+                    namechat = updatemsg["history"].copy()
+                    namechat[0] = {"role": "system", "content": sys_message}
+                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                    print(namechat)
+                    newname = getAnswer(namechat)
+                    try:
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.name = newname
+                        chattodelete.save()
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.delete()
+                        getchat = Chat.objects.filter(name=newname)
+                    except:
+                        return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                 else:
                         return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":getchat[0].name})
             
             else:
                 answer = "Tyod Chat Created"
@@ -285,21 +377,26 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = request.data.get("filename")
                 datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 if(request.data.get("SysMsg")):
                     datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+                    datatosend["messagestoshow"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
                 else:
                     datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                    datatosend["messagestoshow"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
                 if(request.data.get("userQuery")):
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
                     request.data["userQuery"] = getfiledata(request.data.get("filename") , request.data.get("userQuery"))
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
                 else:
                     return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":request.data.get("name")})
                 
         elif(request.data.get("Function") == "intSearch"):
             if(len(getchat)>0):
@@ -307,17 +404,37 @@ def chat(request):
                 s = ""
                 answer = ""
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
+                updatemsgtoshow["history"].append({"role": "user", "content":request.data.get("userQuery")})
                 request.data["userQuery"] = "User Query "+ request.data["userQuery"] + " " +str(getGoogleSearch(request.data.get("userQuery")))
                 updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
                 answer = getAnswer(updatemsg["history"])
                 updatemsg["history"].append({"role": "assistant", "content":answer})
+                updatemsgtoshow["history"].append({"role": "assistant", "content":answer})
                 res["messages"] = updatemsg
+                res["messagestoshow"] = updatemsgtoshow
+                if(len(updatemsg["history"]) == 5):
+                    sys_message = "you look at the user conversation history and name the chat according to it"
+                    namechat = updatemsg["history"].copy()
+                    namechat[0] = {"role": "system", "content": sys_message}
+                    namechat.append({"role": "user", "content": "based on this conversation if you had to name thischat what would you name it just the name dont add any special characters to it no"})
+                    print(namechat)
+                    newname = getAnswer(namechat)
+                    try:
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.name = newname
+                        chattodelete.save()
+                        chattodelete = Chat.objects.get(name = chatname)
+                        chattodelete.delete()
+                        getchat = Chat.objects.filter(name=newname)
+                    except:
+                        return Response({"message":"Something went wrong"})
                 serializer = ChatSerializer(getchat[0], data=res, partial=True)
                 if serializer.is_valid():
                     serializer.save()
                 else:
                         return Response(serializer.errors)
-                return Response({"answer":answer})
+                return Response({"answer":answer , "name":getchat[0].name})
             else:
                 print("in else")
                 answer = "Internet Chat created"
@@ -327,13 +444,17 @@ def chat(request):
                 datatosend["function"] = request.data.get("Function")
                 datatosend["files"] = []
                 datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 datatosend["messages"]["history"].append({"role": "system", "content": """you are an internet search bot the user will ask a query and your job is to answer that query. The data required to answer that query will be provided within the query in the following format UserQuery : UserQuery , Data : [url:url , data:data , url2:url2 , data2:data2]."""})
+                datatosend["messagestoshow"]["history"].append({"role": "system", "content": """you are an internet search bot the user will ask a query and your job is to answer that query. The data required to answer that query will be provided within the query in the following format UserQuery : UserQuery , Data : [url:url , data:data , url2:url2 , data2:data2]."""})
                 if(request.data.get("userQuery")):
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     gsearch = str(getGoogleSearch(request.data.get("userQuery")))
                     request.data["userQuery"] = "USER QUERY - {"+ request.data["userQuery"] + "} Data " + gsearch
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                 serializer = ChatSerializer(data=datatosend , partial=True)
                 if(serializer.is_valid()):
                     serializer.save()
@@ -408,7 +529,7 @@ def chat(request):
                         response = FileResponse(open(filepath, 'rb'))
                         return response
                     else:
-                        return Response({"answer":answer})
+                        return Response({"answer":answer , "name":getchat[0].name})
                 else:
                     updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(updatemsg["history"])
@@ -425,9 +546,11 @@ def chat(request):
                         response = FileResponse(open(filepath, 'rb'))
                         return response
                     else:
-                        return Response({"answer":answer})
+                        return Response({"answer":answer , "name":getchat[0].name})
 
             else:
+                datatosend["messages"] = {"history":[]}
+                datatosend["messagestoshow"] = {"history":[]}
                 print("in else")
                 answer = "Multilang chat created"
                 if(request.data.get("audio")):
@@ -463,7 +586,7 @@ def chat(request):
                     datatosend["files"] = request.data.get("filename")
                 else:
                     datatosend["files"] = []
-                datatosend["messages"] = {"history":[]}
+                
                 if(request.data.get("SysMsg")):
                     datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
                 else:

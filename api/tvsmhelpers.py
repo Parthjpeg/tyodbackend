@@ -39,11 +39,27 @@ def translatetext(text, sourceLang , targetLang):
 
 
 def naturallm(messages):
-  response = client.chat.completions.create(
-  model="gpt-4o",
-  messages=messages
-  )
-  return response.choices[0].message.content
+  # response = client.chat.completions.create(
+  # model="gpt-4o",
+  # messages=messages
+  # )
+  # return response.choices[0].message.content
+  api_key = "f9b9ff0924a24048a80d82b259c3f647"#os.environ['completions_key']
+  url =  "https://ai-api-dev.dentsu.com/openai/deployments/GPT4o128k/chat/completions?api-version=2024-02-01"#os.environ['completions_url']#os.environ['completions_dentsu']
+  hdr ={# Request headers
+        'x-service-line': 'CXM',
+        'x-brand': 'merkle',
+        'x-project': 'Intelligent_M',
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache',
+        'api-version': 'v8',
+        'Ocp-Apim-Subscription-Key': api_key}
+  data ={
+        "model": "GPT4o128k",
+        "messages": messages
+        }  
+  response = requests.post(url=url,headers=hdr , json = data)
+  return response.json().get("choices")[0].get("message").get("content")
 
 
 def Get_Base64_tvsm(file):  #Returns the base64 of an image from the temp memory file

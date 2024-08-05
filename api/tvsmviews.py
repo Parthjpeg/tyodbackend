@@ -9,6 +9,7 @@ from .tvsmhelpers import *
 from django.http import JsonResponse , FileResponse
 from .parameterfromnlp import *
 from pgvector.django import L2Distance
+from .checkforinvalidinput import *
 
 @api_view(['Post'])
 def Add_product(request):
@@ -69,24 +70,42 @@ def tvsmchat(request):
                 audio_file= open(speech_file_path, "rb")
                 userQuery = speechtotext(audio_file)
                 print(userQuery)
-            messages.append({"role": "user","content": f"UserQuery - {userQuery} , ask the user - {chain[currentchain]}"})
-            assistant_resp = naturallm(messages)
-            messages.append({"role": "assistant","content": assistant_resp})
-            print(messages)
-            if(currentchain == 1):
-                fuel_type = electricorpetrol(userQuery)
-                response =  {"history":messages , "question": assistant_resp , "fuel_type":fuel_type}
-            elif(currentchain == 2):
-                vehical_type = bikeorscooter(userQuery)
-                response = {"history":messages , "question": assistant_resp , "vehical_type":vehical_type}
-            else:
+            testmessage = [{"role":"system" , "content":"you are a bot who checks wheather or not the user has answered a question correctly if the user has answered the question correctly respond with - the answer is correct if the user has anwered the question incorrectly respond with the answer is incorrect. certain lingo to refer to if the user says bike it means motorcycle , a scooter also has a similar meaning to a scooty or a moped , vehicals cars bikes motercycle mean the same thing be a bit lenient check not for the words but for the semantic meaning. "},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
+            print(testmessage)
+            assistant_resp = naturallm(testmessage)
+            print(assistant_resp)
+            invalidflag = checkforinvalid(assistant_resp)
+            if(invalidflag):
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
+                assistant_resp = naturallm(testmessage)
                 response = {"history":messages , "question": assistant_resp}
-            if(audio_flag):
-                filepath = texttospeechtvsmwhisper(assistant_resp)
-                file = open(filepath, 'rb')
-                bs64 = Get_Base64_tvsm(file)
-                response["audio_base64"] = bs64
-            return Response(response)
+                if(audio_flag):
+                    filepath = texttospeechtvsmwhisper(assistant_resp)
+                    file = open(filepath, 'rb')
+                    bs64 = Get_Base64_tvsm(file)
+                    response["audio_base64"] = bs64
+                return Response(response)
+            else:
+                messages.append({"role": "user","content": f"UserQuery - {userQuery} , ask the user - {chain[currentchain]}"})
+                assistant_resp = naturallm(messages)
+                messages.append({"role": "assistant","content": assistant_resp})
+                print(messages)
+                if(currentchain == 1):
+                    fuel_type = electricorpetrol(userQuery)
+                    response =  {"history":messages , "question": assistant_resp , "fuel_type":fuel_type}
+                elif(currentchain == 2):
+                    vehical_type = bikeorscooter(userQuery)
+                    response = {"history":messages , "question": assistant_resp , "vehical_type":vehical_type}
+                else:
+                    response = {"history":messages , "question": assistant_resp}
+                if(audio_flag):
+                    filepath = texttospeechtvsmwhisper(assistant_resp)
+                    file = open(filepath, 'rb')
+                    bs64 = Get_Base64_tvsm(file)
+                    response["audio_base64"] = bs64
+                return Response(response)
         else:
             if(request.data.get("bs64audio")):
                 audio_flag = True
@@ -94,6 +113,22 @@ def tvsmchat(request):
                 print(engquery)
             else:
                 engquery = translatetext(userQuery , sourceLang , "en")
+            testmessage = [{"role":"system" , "content":"you are a bot who checks wheather or not the user has answered a question correctly if the user has answered the question correctly respond with - the answer is correct if the user has anwered the question incorrectly respond with the answer is incorrect. certain lingo to refer to if the user says bike it means motorcycle , a scooter also has a similar meaning to a scooty or a moped , vehicals cars bikes motercycle mean the same thing be a bit lenient check not for the words but for the semantic meaning."},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {engquery} """}]
+            print(testmessage)
+            assistant_resp = naturallm(testmessage)
+            print(assistant_resp)
+            invalidflag = checkforinvalid(assistant_resp)
+            if(invalidflag):
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {engquery} """}]
+                assistant_resp = naturallm(testmessage)
+                resp_in_native_language = translatetext(assistant_resp , "en" , sourceLang)
+                response = {"history":messages , "question": resp_in_native_language}
+                if(audio_flag):
+                    bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
+                    response["audio_base64"] = bs64
+                return Response(response)
             messages.append({"role": "user","content": f"UserQuery - {engquery} , ask the user - {chain[currentchain]}"})
             assistant_resp = naturallm(messages)
             messages.append({"role": "assistant","content": assistant_resp})
@@ -130,7 +165,25 @@ def tvsmchat(request):
                 audio_file= open(speech_file_path, "rb")
                 userQuery = speechtotext(audio_file)
                 print(userQuery)
-            stringtovector = "the budget of the user is " + substring + "The user will use it for - " + userQuery
+            testmessage = [{"role":"system" , "content":"you are a bot who checks wheather or not the user has answered a question correctly if the user has answered the question correctly respond with - the answer is correct if the user has anwered the question incorrectly respond with the answer is incorrect. certain lingo to refer to if the user says bike it means motorcycle , a scooter also has a similar meaning to a scooty or a moped"},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
+            print(testmessage)
+            assistant_resp = naturallm(testmessage)
+            print(assistant_resp)
+            invalidflag = checkforinvalid(assistant_resp)
+            if(invalidflag):
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
+                assistant_resp = naturallm(testmessage)
+                response = {"history":messages , "question": assistant_resp}
+                if(audio_flag):
+                    filepath = texttospeechtvsmwhisper(assistant_resp)
+                    file = open(filepath, 'rb')
+                    bs64 = Get_Base64_tvsm(file)
+                    response["audio_base64"] = bs64
+                return Response(response)
+            else:
+                stringtovector = "the budget of the user is " + substring + "The user will use it for - " + userQuery
         else:
             if(request.data.get("bs64audio")):
                 audio_flag = True
@@ -138,6 +191,18 @@ def tvsmchat(request):
                 print(engquery)
             else:
                 engquery = translatetext(userQuery , sourceLang , "en")
+    
+            if(invalidflag):
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                           {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {engquery} """}]
+                assistant_resp = naturallm(testmessage)
+                resp_in_native_language = translatetext(assistant_resp , "en" , sourceLang)
+                response = {"history":messages , "question": resp_in_native_language}
+                if(audio_flag):
+                    bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
+                    response["audio_base64"] = bs64
+                return Response(response)
+            
             stringtovector = "the budget of the user is " + substring + "The user will use it for - " + engquery
         query_vector = Get_Embeddings(stringtovector)
         queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users' , 'vehical_link' , 'vehical_img_link' , 'vehical_testdrive_link' , 'vehical_booking_link')[:1]
