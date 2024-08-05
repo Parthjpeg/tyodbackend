@@ -468,9 +468,27 @@ def chat(request):
             if(len(getchat)>0):
                 res = {}
                 updatemsg = getchat[0].messages
+                updatemsgtoshow = getchat[0].messagestoshow
+                if(request.data.get("SysMsg")):
+                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                    updatemsgtoshow["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
+                else:
+                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+                    updatemsgtoshow["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
                 if(request.data.get("audio")):
                     if(request.data.get("filename")):
+                        audioFileName = str(request.data.get("audio"))
                         request.data["filename"] = json.loads(request.data.get("filename"))
+                        filename, file_extension = os.path.splitext(audioFileName)
+                        audiofile = request.FILES["audio"]
+                        temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+                        filepath = temp.name
+                        for chunk in audiofile.chunks():
+                            temp.write(chunk)
+                        temp.close()
+                        audio_file= open(filepath, "rb")
+                        textinput = speechtotext(audio_file)
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": textinput})
                         base64audio = Get_Base64(request)
                         sourceLang = request.data.get("Sr")
                         targetLang = request.data.get("Tr")
@@ -488,11 +506,13 @@ def chat(request):
                         temp.close()
                         audio_file= open(filepath, "rb")
                         textinput = speechtotext(audio_file)
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": textinput})
                         request.data["userQuery"] = textinput
                 elif(request.data.get("userQuery")):
                     if(request.data.get("filename")):
                         sourceLang = request.data.get("Sr")
                         targetLang = request.data.get("Tr")
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
                         request.data["userQuery"] = translatetexttonative( request.data.get("userQuery") , sourceLang , targetLang)
 
                 if(request.data.get("filename")):
@@ -502,10 +522,7 @@ def chat(request):
                     res["files"] = []
                 res["messages"] = {"history":[]}
 
-                if(request.data.get("SysMsg")):
-                    updatemsg["history"][0] = {"role": "system", "content": request.data.get("SysMsg")}
-                else:
-                    updatemsg["history"][0] = {"role": "system", "content": "you are a helpful assistant"}
+
                 if(request.data.get("userQuery") and len(res["files"])>=1):
                     print("in if")
                     res["files"] = request.data.get("filename")
@@ -516,7 +533,9 @@ def chat(request):
                     updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(updatemsg["history"])
                     updatemsg["history"].append({"role": "assistant", "content":answer})
+                    updatemsgtoshow["history"].append({"role": "assistant", "content":answer})
                     res["messages"] = updatemsg
+                    res["messagestoshow"] = updatemsgtoshow
                     serializer = ChatSerializer(getchat[0], data=res, partial=True)
                     print(answer)
                     if serializer.is_valid():
@@ -532,9 +551,12 @@ def chat(request):
                         return Response({"answer":answer , "name":getchat[0].name})
                 else:
                     updatemsg["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    updatemsgtoshow["history"].append({"role": "user", "content":request.data.get("userQuery")})
                     answer = getAnswer(updatemsg["history"])
                     updatemsg["history"].append({"role": "assistant", "content":answer})
+                    updatemsgtoshow["history"].append({"role": "assistant", "content":answer})
                     res["messages"] = updatemsg
+                    res["messagestoshow"] = updatemsgtoshow
                     serializer = ChatSerializer(getchat[0], data=res , partial=True)
                     if(serializer.is_valid()):
                         serializer.save()
@@ -553,12 +575,29 @@ def chat(request):
                 datatosend["messagestoshow"] = {"history":[]}
                 print("in else")
                 answer = "Multilang chat created"
+                if(request.data.get("SysMsg")):
+                    datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+                    datatosend["messagestoshow"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
+                else:
+                    datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                    datatosend["messagestoshow"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
                 if(request.data.get("audio")):
                     if(request.data.get("filename")):
+                        audioFileName = str(request.data.get("audio"))
                         request.data["filename"] = json.loads(request.data.get("filename"))
                         base64audio = Get_Base64(request)
                         sourceLang = request.data.get("Sr")
                         targetLang = request.data.get("Tr")
+                        filename, file_extension = os.path.splitext(audioFileName)
+                        audiofile = request.FILES["audio"]
+                        temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+                        filepath = temp.name
+                        for chunk in audiofile.chunks():
+                            temp.write(chunk)
+                        temp.close()
+                        audio_file= open(filepath, "rb")
+                        textinput = speechtotext(audio_file)
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": textinput})
                         textInputenglish = translateAudioToEnglish(base64audio , sourceLang , targetLang)
                         request.data["userQuery"] = textInputenglish
                         print(request.data["userQuery"])
@@ -573,11 +612,13 @@ def chat(request):
                         temp.close()
                         audio_file= open(filepath, "rb")
                         textinput = speechtotext(audio_file)
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": textinput})
                         request.data["userQuery"] = textinput
                 elif(request.data.get("userQuery")):
                     if(request.data.get("filename")):
                         sourceLang = request.data.get("Sr")
                         targetLang = request.data.get("Tr")
+                        datatosend["messagestoshow"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
                         request.data["userQuery"] = translatetexttonative( request.data.get("userQuery") , sourceLang , targetLang)
                 datatosend = {"name":request.data.get("name")}
                 datatosend["function"] = request.data.get("Function")
@@ -587,10 +628,7 @@ def chat(request):
                 else:
                     datatosend["files"] = []
                 
-                if(request.data.get("SysMsg")):
-                    datatosend["messages"]["history"].append({"role": "system", "content": request.data.get("SysMsg")})
-                else:
-                    datatosend["messages"]["history"].append({"role": "system", "content": "you are a helpful assistant"})
+                
                 if(request.data.get("userQuery") and len(datatosend["files"])>=1):
                     print(type(datatosend["files"]))
                     sourceLang = request.data.get("Tr")
@@ -615,8 +653,10 @@ def chat(request):
                         return Response({"answer":answer})
                 elif(request.data.get("userQuery")):
                     datatosend["messages"]["history"].append({"role": "user", "content":request.data.get("userQuery")})
+                    datatosend["messagestoshow"]["history"].append({"role": "user", "content": request.data.get("userQuery")})
                     answer = getAnswer(datatosend["messages"]["history"])
                     datatosend["messages"]["history"].append({"role": "assistant", "content":answer})
+                    datatosend["messagestoshow"]["history"].append({"role": "assistant", "content":answer})
                     serializer = ChatSerializer(data=datatosend , partial=True)
                     if(serializer.is_valid()):
                         serializer.save()
