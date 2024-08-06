@@ -10,45 +10,45 @@ from django.http import JsonResponse , FileResponse
 from .parameterfromnlp import *
 from pgvector.django import L2Distance
 from .checkforinvalidinput import *
-# from ffmpeg import FFmpeg
+from ffmpeg import FFmpeg
 import json
 
 
 def getreadableaudio(request):
-    # bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
-    # temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
-    # speech_file_path = temp1.name
-    # f = open(speech_file_path, 'wb')
-    # f.write(bytes)
-    # f.close()
+    bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
+    temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    speech_file_path = temp1.name
+    f = open(speech_file_path, 'wb')
+    f.write(bytes)
+    f.close()
 
-    # # audioFileName = str(request.data.get("audio"))
-    # # filename, file_extension = os.path.splitext(audioFileName)
-    # # audiofile = request.FILES["audio"]
-    # # temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
-    # # filepath = temp.name
-    # # for chunk in audiofile.chunks():
-    # #     temp.write(chunk)
-    # # temp.close()
+    # audioFileName = str(request.data.get("audio"))
+    # filename, file_extension = os.path.splitext(audioFileName)
+    # audiofile = request.FILES["audio"]
+    # temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+    # filepath = temp.name
+    # for chunk in audiofile.chunks():
+    #     temp.write(chunk)
+    # temp.close()
 
-    # temp2 = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-    # filepath2 = temp2.name
-    # ffmpeg = (
-    #     FFmpeg()
-    #     .option("y")
-    #     .input(speech_file_path)
-    #     .output(
-    #         filepath2,
-    #         {"codec:v": "libx264"},
-    #         vf="scale=1280:-1",
-    #         preset="veryslow",
-    #         crf=24,
-    #     )
-    # )
+    temp2 = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    filepath2 = temp2.name
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input(speech_file_path)
+        .output(
+            filepath2,
+            {"codec:v": "libx264"},
+            vf="scale=1280:-1",
+            preset="veryslow",
+            crf=24,
+        )
+    )
 
-    # ffmpeg.execute()
-    # base64rewamped = base64.b64encode(BytesIO(open(filepath2 , 'rb').read()).getvalue()).decode('utf-8')
-    return request.data.get("bs64audio")
+    ffmpeg.execute()
+    base64rewamped = base64.b64encode(BytesIO(open(filepath2 , 'rb').read()).getvalue()).decode('utf-8')
+    return base64rewamped
 
 @api_view(['Post'])
 def Add_product(request):
