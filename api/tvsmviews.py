@@ -10,6 +10,45 @@ from django.http import JsonResponse , FileResponse
 from .parameterfromnlp import *
 from pgvector.django import L2Distance
 from .checkforinvalidinput import *
+from ffmpeg import FFmpeg
+import json
+
+
+def getreadableaudio(request):
+    bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
+    temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
+    speech_file_path = temp1.name
+    f = open(speech_file_path, 'wb')
+    f.write(bytes)
+    f.close()
+
+    # audioFileName = str(request.data.get("audio"))
+    # filename, file_extension = os.path.splitext(audioFileName)
+    # audiofile = request.FILES["audio"]
+    # temp = tempfile.NamedTemporaryFile(delete=False, suffix=file_extension)
+    # filepath = temp.name
+    # for chunk in audiofile.chunks():
+    #     temp.write(chunk)
+    # temp.close()
+
+    temp2 = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    filepath2 = temp2.name
+    ffmpeg = (
+        FFmpeg()
+        .option("y")
+        .input(speech_file_path)
+        .output(
+            filepath2,
+            {"codec:v": "libx264"},
+            vf="scale=1280:-1",
+            preset="veryslow",
+            crf=24,
+        )
+    )
+
+    ffmpeg.execute()
+    base64rewamped = base64.b64encode(BytesIO(open(filepath2 , 'rb').read()).getvalue()).decode('utf-8')
+    return base64rewamped
 
 @api_view(['Post'])
 def Add_product(request):
@@ -31,7 +70,7 @@ def Add_product(request):
             return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
         
 
-@api_view(['Post'])      
+@api_view(['Post'])
 def tvsmchat(request):
     audio_flag = False
     sys_msg = "you are a helpful assistant"
@@ -61,6 +100,7 @@ def tvsmchat(request):
         if(sourceLang == "en"):
             if(request.data.get("bs64audio")):
                 audio_flag = True
+                request.data["bs64audio"] = getreadableaudio(request)
                 bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
                 temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
                 speech_file_path = temp1.name
@@ -109,6 +149,7 @@ def tvsmchat(request):
         else:
             if(request.data.get("bs64audio")):
                 audio_flag = True
+                request.data["bs64audio"] = getreadableaudio(request)
                 engquery = translateAudioToEnglishTvsm(request.data.get("bs64audio") , sourceLang , "en")
                 print(engquery)
             else:
@@ -156,6 +197,7 @@ def tvsmchat(request):
         if(sourceLang == "en"):
             if(request.data.get("bs64audio")):
                 audio_flag = True
+                request.data["bs64audio"] = getreadableaudio(request)
                 bytes = base64.b64decode(request.data.get("bs64audio"), validate=True)
                 temp1 = tempfile.NamedTemporaryFile(delete=False, suffix='.wav')
                 speech_file_path = temp1.name
@@ -187,6 +229,7 @@ def tvsmchat(request):
         else:
             if(request.data.get("bs64audio")):
                 audio_flag = True
+                request.data["bs64audio"] = getreadableaudio(request)
                 engquery = translateAudioToEnglishTvsm(request.data.get("bs64audio") , sourceLang , "en")
                 print(engquery)
             else:
@@ -361,3 +404,22 @@ def chatAccessories(request):
             bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
             response["audio_base64"] = bs64
         return Response(response)   
+    
+
+
+@api_view(["POST"])
+def jsontest(request):
+        request.data["history"] = json.loads(request.data.get("history"))
+        print(str(request.data["history"]))
+        print(type(request.data["history"]))
+        file_path = 'C:/personal/extentia/tyod/test.wav'
+        response = FileResponse(open(file_path, 'rb'))
+        history = [{"role":"system", "content":"hello"}]
+        # Add JSON data to headers
+        response['history'] = request.data["history"]
+        return response
+    
+
+@api_view(['Post'])
+def tvsmchatwithoutbase64(request):
+    pass

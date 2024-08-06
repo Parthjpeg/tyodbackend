@@ -34,5 +34,6 @@ urlpatterns = [
     path('audiotobs64/' , audiotobs64),
     path('bs64toaudio/' , bs64toaudio),
     path('addaccessories/', Add_Tvsm_Accessories),
-    path('chattvsmaccessories/' , chatAccessories)
+    path('chattvsmaccessories/' , chatAccessories),
+    path('jsoncheck/' , jsontest)
 ]
