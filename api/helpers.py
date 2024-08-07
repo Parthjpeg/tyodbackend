@@ -66,7 +66,7 @@ def getAnswer(messages):
   #       "messages": messages
   #       }  
   # response = requests.post(url=url,headers=hdr , json = data)
-  return response.json().get("choices")[0].get("message").get("content")
+  # return response.json().get("choices")[0].get("message").get("content")
 
 def webSearch(searchQuery):
   res = search(searchQuery, num_results=15)
@@ -137,37 +137,6 @@ def speechtotext(audio_file):
   )
   final_input = transcription.text
   return (final_input)
-
-
-# def translatetexttoEnglish(sourceText , sourceLang, targetLang):
-#   api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"
-#   headers = {
-#     "Content-Type": "application/json",
-#     "Authorization": api_key
-#   }
-#   payload = {
-#     "pipelineTasks": [
-#         {
-#             "taskType": "translation",
-#             "config": {
-#                 "language": {
-#                     "sourceLanguage": "mr",
-#                     "targetLanguage": "en"
-#                 },
-#                 "serviceId": "ai4bharat/indictrans-v2-all-gpu--t4"
-#             }
-#         }
-#     ],
-#     "inputData": {
-#         "input": [
-#             {
-#                 "source": "नमस्कार माझा"
-#             }
-#         ]
-#     }
-#   }
-#   response = requests.post("https://dhruva-api.bhashini.gov.in/services/inference/pipeline", headers=headers, json=payload)
-#   print(response.json())
 
 def translateAudioToEnglish(base64Audio, sourceLang, targetLang):
   api_key = "0ELDJvqbaDLzAGPIR1Dfv38ehE21HkMjxWkXYWq-Mk1bajlyyxXMyHGpwb3lD2cz"

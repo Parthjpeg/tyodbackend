@@ -73,7 +73,7 @@ def Add_product(request):
 @api_view(['Post'])
 def tvsmchat(request):
     audio_flag = False
-    sys_msg = "you are a helpful assistant"
+    sys_msg = "You are a helpful assistant"
     chain = ["greet the user and ask them weather they want an electric vehical or a petrol one" , "do you prefer a scooter or a motorcycle" , "What is your budget", "Are you going to use it for city rides or long rides" ]
     messages = request.data.get("history")
     sourceLang = request.data.get("sourceLang")
@@ -117,7 +117,7 @@ def tvsmchat(request):
             print(assistant_resp)
             invalidflag = checkforinvalid(assistant_resp)
             if(invalidflag):
-                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it, even if you think the user has already answered the question you have to strictly ask the question again regaredless of anything"""},
                            {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
                 assistant_resp = naturallm(testmessage)
                 response = {"history":messages , "question": assistant_resp}
@@ -161,7 +161,7 @@ def tvsmchat(request):
             print(assistant_resp)
             invalidflag = checkforinvalid(assistant_resp)
             if(invalidflag):
-                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it, even if you think the user has already answered the question you have to strictly ask the question again regaredless of anything"""},
                            {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {engquery} """}]
                 assistant_resp = naturallm(testmessage)
                 resp_in_native_language = translatetext(assistant_resp , "en" , sourceLang)
@@ -214,7 +214,7 @@ def tvsmchat(request):
             print(assistant_resp)
             invalidflag = checkforinvalid(assistant_resp)
             if(invalidflag):
-                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it, even if you think the user has already answered the question you have to strictly ask the question again regaredless of anything"""},
                            {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {userQuery} """}]
                 assistant_resp = naturallm(testmessage)
                 response = {"history":messages , "question": assistant_resp}
@@ -236,7 +236,7 @@ def tvsmchat(request):
                 engquery = translatetext(userQuery , sourceLang , "en")
     
             if(invalidflag):
-                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it"""},
+                testmessage = [{"role":"system" , "content":f"""The user has gotten a bit offtracked your job is to ask the user {chain[currentchain - 1]} , and dont answer the user question but use elements from the user answer to make the reframing fun. Dont start with a greeting the greetings are already done, do not imply that we would circle back to it, even if you think the user has already answered the question you have to strictly ask the question again regaredless of anything"""},
                            {"role":"user" , "content" : f""" Question {chain[currentchain - 1]} , User Answer - {engquery} """}]
                 assistant_resp = naturallm(testmessage)
                 resp_in_native_language = translatetext(assistant_resp , "en" , sourceLang)
