@@ -72,6 +72,8 @@ def Add_product(request):
 
 @api_view(['Post'])
 def tvsmchat(request):
+    if(not request.data.get("sourceLang")):
+        return Response({"no source Language"})
     audio_flag = False
     sys_msg = "You are a helpful assistant"
     chain = ["greet the user and ask them weather they want an electric vehical or a petrol one" , "do you prefer a scooter or a motorcycle" , "What is your budget", "Are you going to use it for city rides or long rides" ]
@@ -363,7 +365,7 @@ def chatAccessories(request):
         message.append({"role":"system" , "content":sys_msg})
         message.append({"role":"user" , "content":finalinput})
         assistant_response = naturallm(message)
-        response = {"Product" : queryset[0] , "Description": assistant_response}
+        response = {"product" : queryset[0] , "description": assistant_response}
         if(audio_flag):
             # filepath = texttospeechtvsmwhisper(assistant_response)
             # file = open(filepath, 'rb')
@@ -399,7 +401,7 @@ def chatAccessories(request):
         message.append({"role":"user" , "content":finalinput})
         assistant_response = naturallm(message)
         resp_in_native_language = translatetext(assistant_response , "en" , sourceLang)
-        response = {"Product" : queryset[0] , "Description": resp_in_native_language}
+        response = {"product" : queryset[0] , "description": resp_in_native_language}
         if(audio_flag):
             bs64 = texttospeechtvsm(resp_in_native_language , sourceLang)
             response["audio_base64"] = bs64
