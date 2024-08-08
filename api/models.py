@@ -33,6 +33,7 @@ class Tvsm_Vehicles(models.Model):
     vehicle_description = models.CharField(max_length=2000)
     vehical_link = models.CharField(max_length=200 , null=True)
     vehical_img_link = models.CharField(max_length=200 , null=True)
+    vehical_img_link_2 = models.CharField(max_length=200 , null=True)
     vehical_testdrive_link = models.CharField(max_length=200 , null=True)
     vehical_booking_link = models.CharField(max_length=200 , null=True)
     feature_vector = VectorField(dimensions=1536)

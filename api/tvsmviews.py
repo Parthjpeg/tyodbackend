@@ -250,7 +250,7 @@ def tvsmchat(request):
             
             stringtovector = "the budget of the user is " + substring + "The user will use it for - " + engquery
         query_vector = Get_Embeddings(stringtovector)
-        queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users' , 'vehical_link' , 'vehical_img_link' , 'vehical_testdrive_link' , 'vehical_booking_link')[:1]
+        queryset = Tvsm_Vehicles.objects.filter(vehicle_fuel_type = request.data.get("fuel_type")).filter(vehicle_type = request.data.get("vehical_type")).annotate(distance=L2Distance('feature_vector',query_vector)).order_by('distance').values('vehicle_name', 'vehicle_type' , 'vehicle_price' , 'distance' , 'vehicle_description' , 'vehicle_fuel_type' , 'vehicle_prime_users' , 'vehical_link' , 'vehical_img_link' , 'vehical_img_link_2' ,'vehical_testdrive_link' , 'vehical_booking_link')[:1]
         print(queryset[0].get("vehicle_description"))
         sys_msg = "you provide information about vehicles the information you need to provide is already present in the userQuery what you need to do is take that information and create an awesome summary about why the user needs to buy that vehical, Whenever you use the vehical name make sure its in all CAPS. eg if the name is tvs jupyter make it TVS JUPYTER. Also always end with click on the button below to book the vehical or you can also book a test ride"
         messages = [{"role":"system" , "content":sys_msg}]
